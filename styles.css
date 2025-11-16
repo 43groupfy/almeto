@@ -1140,7 +1140,7 @@ textarea:focus {
     gap: 0.75rem;
     width: 100px;
     min-height: 50px;
-    max-height: 150px;
+    max-height: 170px;
 }
 
 .preview-item:hover {
@@ -2464,3 +2464,4 @@ hr {
     font-size: 0.9rem;
 
 }
+
