@@ -1186,6 +1186,7 @@ textarea:focus {
     color: var(--dark);
     white-space: nowrap;
     overflow: hidden;
+    max-width: 40px;
     text-overflow: ellipsis;
     margin-bottom: 0.25rem;
 }
@@ -2461,4 +2462,5 @@ hr {
 .file-list-merge .empty-state p {
     margin: 0;
     font-size: 0.9rem;
+
 }
