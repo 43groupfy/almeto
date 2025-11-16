@@ -363,7 +363,7 @@
 
         function renderPreview() {
             // Hapus empty state jika ada
-            const emptyState = preview.querySelector('.empty-state');
+            const emptyState = preview.querySelector('.converter-empty-state');
             if (emptyState) {
                 emptyState.remove();
             }
@@ -372,7 +372,7 @@
 
             if (images.length === 0) {
                 const emptyState = document.createElement('div');
-                emptyState.className = 'empty-state';
+                emptyState.className = 'converter-empty-state';
                 emptyState.innerHTML = `
                     <i class="fas fa-images"></i>
                     <p>Belum ada gambar yang diunggah</p>
