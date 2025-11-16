@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Merger - Gabungkan PDF dengan Mudah | PDF Tools Pro</title>
+    <script src="js/pdf-lib.min.js"></script>
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+	<link rel="icon" type="image/png" href="favicon.ico" sizes="32x32">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <img src="icons/appIcon.png" alt="Splash Logo" width="40" height="40">
+                <span>ARSIVITA</span>
+            </div>
+            <nav class="nav-links">
+				<a href="index.html">Home</a>
+                <a href="converter.html">Konversi</a>
+                <a href="watermarker.html">Watermark</a>
+                <a href="spliter.html">Split</a>
+                <a href="#" class="active">Merge</a>
+            </nav>
+        </header>
+
+        <!-- App Header -->
+        <section class="app-header">
+            <h1>PDF Merger</h1>
+            <p>Gabungkan beberapa file PDF menjadi satu dengan urutan yang Anda tentukan</p>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="main-content-grid">
+            <!-- Kolom Kanan: Upload File -->
+            <div class="content-column">
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-file-upload"></i>
+                        Upload File PDF
+                    </div>
+                    
+                    <div class="file-upload-area" id="uploadArea" style="height: 300px">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3>Klik untuk memilih file PDF</h3>
+                        <p>Atau drag & drop file di sini</p>
+                        <div class="file-info" id="fileInfo">Format yang didukung: PDF</div>
+                        <input type="file" id="merge-pdf-files" multiple accept="application/pdf">
+                    </div>
+			
+					<!-- TOMBOL HAPUS SEMUA YANG DITAMBAHKAN -->
+                    <button id="clearAllBtn" class="btn btn-danger" style="width: 100%; margin-top: 10px; background: #800000">
+                        <i class="fas fa-broom"></i>
+                        Hapus Semua
+                    </button>	    
+                </div>
+            </div>
+
+            <!-- Kolom Kiri: Urutkan dan Daftar File -->
+            <div class="content-column">
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-gear"></i>
+                        Konfigurasi Urutan File
+                    </div>
+                    <div class="form-group">
+                        <select id="sortOrder" class="form-select">
+                            <option value="manual">Drag & Drop Manual</option>
+                            <option value="az">Nama File A-Z</option>
+                            <option value="za">Nama File Z-A</option>
+                            <option value="date">Tanggal Upload</option>
+                        </select>
+                        <div class="file-list-container-merge">
+                            <ul id="file-list" class="file-list-merge">
+                                <li class="empty-state">Belum ada file yang dipilih</li>
+                            </ul>
+                        </div>
+                    </div>
+						<div class="merge-actions" style="margin-bottom: -2rem;">
+						  <div class="form-group">
+							<label for="merge-filename">
+							  <input type="text" id="merge-filename" value="merged_document" placeholder="Masukkan nama file hasil merge">
+							  <div class="format-file">.pdf</div>
+							</label>
+						  </div>
+						  
+						  <div class="action-buttons">
+							<button class="btn btn-success" id="mergeBtn">
+							  <i class="fas fa-object-group"></i>
+							  Merge PDF
+							</button>
+						  </div>
+						</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Opsi Download (Bagian Bawah) -->
+
+        <!-- Progress Section -->
+        <div id="progressContainer" class="progress-container">
+            <div class="progress-header">
+                <div class="progress-label">Menggabungkan PDF...</div>
+                <div class="progress-percent" id="progressPercent">0%</div>
+            </div>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+            <div id="progressText" class="progress-text">Mempersiapkan...</div>
+        </div>
+
+        <!-- Messages -->
+        <div id="errorMessage" class="error"></div>
+        <div id="successMessage" class="success"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 <b>Arsivita</b> | Dikembangkan <a href="https://instagram.com/tatangaditya">Tatang Aditya</a> untuk aktualisasi Latsar ASN </p>
+    </footer>
+
+    <script>
+        // Elemen DOM
+        const fileInput = document.getElementById("merge-pdf-files");
+        const fileList = document.getElementById("file-list");
+        const sortOrder = document.getElementById("sortOrder");
+        const mergeBtn = document.getElementById("mergeBtn");
+        const clearAllBtn = document.getElementById("clearAllBtn"); // TOMBOL BARU
+        const uploadArea = document.getElementById("uploadArea");
+        const progressContainer = document.getElementById("progressContainer");
+        const progressFill = document.getElementById("progressFill");
+        const progressText = document.getElementById("progressText");
+        const progressPercent = document.getElementById("progressPercent");
+        const errorMessage = document.getElementById("errorMessage");
+        const successMessage = document.getElementById("successMessage");
+
+        // State aplikasi
+        let files = [];
+        let manualOrder = [];
+
+        // Event listeners
+        fileInput.addEventListener("change", handleFileSelect);
+        sortOrder.addEventListener("change", applySort);
+        mergeBtn.addEventListener("click", mergePDF);
+        clearAllBtn.addEventListener("click", clearAllFiles); // EVENT LISTENER BARU
+        
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect({ target: fileInput });
+            }
+        });
+
+        // Fungsi untuk menangani pemilihan file
+        function handleFileSelect(e) {
+            if (e.target.files.length === 0) return;
+            
+            // Reset file input untuk mengizinkan upload file yang sama lagi
+            const newFiles = Array.from(e.target.files);
+            fileInput.value = ''; // Reset input file
+            
+            // Tambahkan file baru ke array
+            files = [...files, ...newFiles];
+            manualOrder = [...manualOrder, ...newFiles];
+            
+            renderFileList();
+            showSuccess(`Ditambahkan ${newFiles.length} file. Total: ${files.length} file.`);
+            updateUploadArea();
+        }
+
+        // Fungsi untuk merender daftar file
+        function renderFileList() {
+            fileList.innerHTML = "";
+
+            if (files.length === 0) {
+                fileList.innerHTML = '<li class="empty-state">Belum ada file yang dipilih</li>';
+                return;
+            }
+
+            manualOrder.forEach((file, index) => {
+                const li = document.createElement("li");
+                li.draggable = sortOrder.value === "manual";
+                li.dataset.index = index;
+                
+                const fileInfo = document.createElement("div");
+                fileInfo.className = "file-info-merge";
+                
+                const fileNameSpan = document.createElement("div");
+                fileNameSpan.className = "file-name-merge";
+                fileNameSpan.textContent = file.name;
+                
+                const fileDetails = document.createElement("div");
+                fileDetails.className = "file-details";
+                fileDetails.textContent = `${formatFileSize(file.size)} • ${new Date(file.lastModified).toLocaleDateString()}`;
+                
+                fileInfo.appendChild(fileNameSpan);
+                fileInfo.appendChild(fileDetails);
+                
+                const removeBtn = document.createElement("button");
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.className = "remove-btn-merge";
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeFile(index);
+                };
+                
+                const dragHandle = document.createElement("div");
+                dragHandle.className = "drag-handle";
+                dragHandle.innerHTML = '<i class="fas fa-grip-vertical"></i>';
+                
+                li.appendChild(dragHandle);
+                li.appendChild(fileInfo);
+                li.appendChild(removeBtn);
+
+                if (sortOrder.value === "manual") {
+                    li.addEventListener("dragstart", handleDragStart);
+                    li.addEventListener("dragover", handleDragOver);
+                    li.addEventListener("drop", handleDrop);
+                    li.addEventListener("dragend", handleDragEnd);
+                }
+
+                fileList.appendChild(li);
+            });
+        }
+
+        // Fungsi untuk menghapus file
+        function removeFile(index) {
+            const removedFile = manualOrder[index];
+            manualOrder.splice(index, 1);
+            
+            const fileIndex = files.findIndex(f => f.name === removedFile.name && f.size === removedFile.size);
+            if (fileIndex !== -1) {
+                files.splice(fileIndex, 1);
+            }
+            
+            renderFileList();
+            showSuccess(`File "${removedFile.name}" dihapus.`);
+            updateUploadArea();
+        }
+
+        // Fungsi untuk menghapus semua file
+        function clearAllFiles() {
+            if (files.length === 0) {
+                showError('Tidak ada file untuk dihapus.');
+                return;
+            }
+            
+            if (confirm('Apakah Anda yakin ingin menghapus semua file?')) {
+                files = [];
+                manualOrder = [];
+                renderFileList();
+                showSuccess('Semua file telah dihapus.');
+                updateUploadArea();
+            }
+        }
+
+        // Fungsi untuk mengurutkan file
+        function applySort() {
+            if (sortOrder.value === "az") {
+                manualOrder.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortOrder.value === "za") {
+                manualOrder.sort((a, b) => b.name.localeCompare(a.name));
+            } else if (sortOrder.value === "date") {
+                manualOrder.sort((a, b) => a.lastModified - b.lastModified);
+            }
+            renderFileList();
+            showSuccess("File diurutkan.");
+        }
+
+        // Fungsi untuk update upload area
+        function updateUploadArea() {
+            if (files.length > 0) {
+                uploadArea.classList.add('has-file');
+                document.getElementById('fileInfo').textContent = `${files.length} file PDF dipilih`;
+            } else {
+                uploadArea.classList.remove('has-file');
+                document.getElementById('fileInfo').textContent = 'Format yang didukung: PDF';
+            }
+        }
+
+        // Drag and drop functions
+        let dragStartIndex;
+
+        function handleDragStart(e) {
+            dragStartIndex = +e.target.closest('li').dataset.index;
+            e.target.closest('li').classList.add("dragging");
+            e.dataTransfer.setData("text/plain", dragStartIndex);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dragEndIndex = +e.target.closest('li').dataset.index;
+            
+            if (dragStartIndex !== dragEndIndex) {
+                const [movedItem] = manualOrder.splice(dragStartIndex, 1);
+                manualOrder.splice(dragEndIndex, 0, movedItem);
+                renderFileList();
+                showSuccess("Urutan file diubah.");
+            }
+        }
+
+        function handleDragEnd(e) {
+            e.target.closest('li').classList.remove("dragging");
+        }
+
+        // Format ukuran file
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Progress functions
+        function updateProgress(percent, text) {
+            progressFill.style.width = `${percent}%`;
+            progressText.textContent = text;
+            progressPercent.textContent = `${Math.round(percent)}%`;
+        }
+
+        function showProgress() {
+            progressContainer.style.display = 'block';
+        }
+
+        function hideProgress() {
+            progressContainer.style.display = 'none';
+        }
+
+        // Message functions
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Fungsi utama untuk menggabungkan PDF
+        async function mergePDF() {
+            if (!manualOrder.length) {
+                showError('Silakan pilih file PDF terlebih dahulu.');
+                return;
+            }
+            
+            // Nonaktifkan tombol selama proses
+            mergeBtn.disabled = true;
+            mergeBtn.innerHTML = '<div class="loading-spinner"></div> Memproses...';
+            
+            try {
+                showProgress();
+                updateProgress(5, 'Mempersiapkan penggabungan...');
+                
+                const mergedPdf = await PDFLib.PDFDocument.create();
+                
+                // Proses setiap file PDF
+                for (let i = 0; i < manualOrder.length; i++) {
+                    const file = manualOrder[i];
+                    
+                    try {
+                        updateProgress(5 + (i / manualOrder.length * 85), `Memproses ${file.name}...`);
+                        
+                        // Load file PDF
+                        const arrayBuffer = await readFileAsArrayBuffer(file);
+                        const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                        
+                        // Salin halaman dari PDF yang dimuat ke PDF baru
+                        const pages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+                        pages.forEach(page => mergedPdf.addPage(page));
+                        
+                    } catch (error) {
+                        console.error(`Error processing file ${file.name}:`, error);
+                        hideProgress();
+                        showError(`Error memproses file ${file.name}. Pastikan ini file PDF yang valid.`);
+                        mergeBtn.disabled = false;
+                        mergeBtn.innerHTML = '<i class="fas fa-object-group"></i> Merge PDF';
+                        return;
+                    }
+                }
+                
+                updateProgress(95, 'Menyimpan PDF hasil merge...');
+                
+                // Simpan PDF yang telah digabungkan
+                const mergedPdfBytes = await mergedPdf.save();
+                const filename = document.getElementById('merge-filename').value || 'merged_document';
+                
+                // Download file
+                download(mergedPdfBytes, filename + '.pdf');
+                
+                updateProgress(100, 'Selesai! File sedang didownload...');
+                showSuccess('PDF berhasil digabungkan! File sudah didownload.');
+                
+                // Reset progress bar setelah 3 detik
+                setTimeout(() => {
+                    hideProgress();
+                    updateProgress(0, 'Mempersiapkan...');
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Error merging PDF:', error);
+                hideProgress();
+                showError('Error menggabungkan PDF. Silakan coba lagi.');
+            } finally {
+                // Aktifkan tombol kembali
+                mergeBtn.disabled = false;
+                mergeBtn.innerHTML = '<i class="fas fa-object-group"></i> Merge PDF';
+            }
+        }
+
+        // Fungsi untuk membaca file sebagai ArrayBuffer
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Fungsi untuk mendownload file
+        function download(data, filename) {
+            const blob = new Blob([data], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Inisialisasi
+        renderFileList();
+    </script>
+</body>
+</html>

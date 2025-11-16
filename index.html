@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arsivita — Alih Media Tools</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="fontawesome/css/all.min.css">
+  <link rel="icon" type="image/png" href="favicon.ico" sizes="32x32">
+
+  <!-- Manifest -->
+  <meta name="theme-color" content="#800000">
+
+  <style>
+    :root {
+      --maroon: #800000;
+      --maroon-light: #a03333;
+      --maroon-dark: #660000;
+      --light: #f8f8f8;
+      --light-gray: #f0f0f0;
+      --dark: #222;
+      --text-secondary: #555;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-hover: 0 8px 20px rgba(0,0,0,0.12);
+      --radius: 12px;
+    }
+
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+    }
+
+    body {
+      background: var(--light);
+      color: var(--dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      text-align: center;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Splash Screen */
+    #splash {
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100%; 
+      height: 100%;
+      background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-dark) 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 9999;
+      transition: opacity 0.6s ease;
+    }
+    #splash.fade-out { 
+      opacity: 0; 
+      pointer-events: none; 
+    }
+    #splash i {
+      margin-bottom: 1rem;
+      animation: pulse 1.5s infinite;
+    }
+    #splash h1 { 
+      font-size: 2rem; 
+      margin-bottom: 0.5rem; 
+      font-weight: 600;
+    }
+    #splash p {
+      opacity: 0.9;
+      font-size: 1rem;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    /* Header */
+    header {
+      width: 100%;
+      padding: 2.5rem 1rem;
+      background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-light) 100%);
+      color: white;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+      z-index: 0;
+    }
+    header > * {
+      position: relative;
+      z-index: 1;
+    }
+    header h1 { 
+      font-size: 2.2rem; 
+      margin-bottom: 0.5rem; 
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    header p { 
+      opacity: 0.9; 
+      font-size: 1.05rem; 
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Main Grid */
+    main {
+      padding: 3rem 1rem;
+      max-width: 1100px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2rem;
+    }
+
+    .tool-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 2.5rem 1.5rem;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease-in-out;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--maroon);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .tool-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .tool-card i {
+      font-size: 2.5rem;
+      color: var(--maroon);
+      margin-bottom: 1.5rem;
+      transition: transform 0.3s ease;
+    }
+
+    .tool-card:hover i {
+      transform: scale(1.1);
+    }
+
+    .tool-card h3 {
+      font-size: 1.25rem;
+      color: var(--dark);
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    .tool-card p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .tool-card .btn {
+      margin-top: 1.5rem;
+      padding: 0.6rem 1.2rem;
+      background: var(--maroon);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .tool-card .btn:hover {
+      background: var(--maroon-dark);
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 2rem 1rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      width: 100%;
+      background: var(--light-gray);
+      border-top: 1px solid rgba(0,0,0,0.05);
+    }
+
+    footer a {
+      color: var(--maroon);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+    footer a:hover { 
+      text-decoration: underline; 
+      color: var(--maroon-dark);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header {
+        padding: 2rem 1rem;
+      }
+      
+      header h1 {
+        font-size: 1.8rem;
+      }
+      
+      header p {
+        font-size: 0.95rem;
+      }
+      
+      main {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 2rem 1rem;
+      }
+      
+      .tool-card {
+        padding: 2rem 1.2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header h1 {
+        font-size: 1.6rem;
+      }
+      
+      .tool-card {
+        padding: 1.8rem 1rem;
+      }
+      
+      .tool-card i {
+        font-size: 2.2rem;
+      }
+    }
+	.splash img{
+		width: 50px;
+	}
+  </style>
+</head>
+
+<body>
+
+  <!-- Splash Screen 
+  <div id="splash">
+     <img src="icons/splash-logo.png"" alt="Splash Logo" width="40" height="40">
+    <h1>Arsivita</h1>
+    <p>Memuat Aplikasi...</p>
+  </div>
+-->
+  <header>
+    <h1><img src="icons/splash-logo.png"" alt="Splash Logo" width="40" height="40"></i> Arsivita</h1>
+    <p>Alih Media Tools — Solusi Digital Arsiparis Modern</p>
+  </header>
+
+  <main>
+    <div class="tool-card" onclick="location.href='converter.html'">
+      <i class="fa-solid fa-image"></i>
+      <h3>Image to PDF</h3>
+      <p>Ubah kumpulan gambar hasil alih media menjadi satu berkas PDF.</p>
+      <button class="btn">Mulai Konversi</button>
+    </div>
+
+    <div class="tool-card" onclick="location.href='watermarker.html'">
+      <i class="fa-solid fa-stamp"></i>
+      <h3>Watermark PDF</h3>
+      <p>Lindungi dokumen PDF dengan watermark teks atau logo institusi.</p>
+      <button class="btn">Tambahkan</button>
+    </div>
+
+    <div class="tool-card" onclick="location.href='spliter.html'">
+      <i class="fa-solid fa-scissors"></i>
+      <h3>Split PDF</h3>
+      <p>Pecah file PDF menjadi beberapa bagian sesuai kebutuhan.</p>
+      <button class="btn">Pisahkan</button>
+    </div>
+
+    <div class="tool-card" onclick="location.href='merger.html'">
+      <i class="fa-solid fa-layer-group"></i>
+      <h3>Merge PDF</h3>
+      <p>Satukan beberapa file PDF menjadi satu dokumen lengkap.</p>
+      <button class="btn">Gabungkan</button>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 <b>Arsivita</b> | Dikembangkan <a href="https://instagram.com/tatangaditya">Tatang Aditya</a> untuk aktualisasi Latsar ASN </p>
+  </footer>
+
+  <!-- Script: Splash + Domain Protection + PWA -->
+  <script>
+
+
+    // Splash Fade Out
+   // window.addEventListener('load', () => {
+   //   const splash = document.getElementById('splash');
+   //   setTimeout(() => splash.classList.add('fade-out'), 1500);
+   // });
+
+  </script>
+
+</body>
+</html>

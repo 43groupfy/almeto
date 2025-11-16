@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Splitter - Pisahkan PDF dengan Kualitas Asli | PDF Tools Pro</title>
+    <script src="js/pdf.min.js"></script>
+    <script src="js/jszip.min.js"></script>
+    <script src="js/FileSaver.min.js"></script>
+    <script src="js/pdf-lib.min.js"></script>
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+	<link rel="icon" type="image/png" href="favicon.ico" sizes="32x32">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <img src="icons/appIcon.png" alt="Splash Logo" width="40" height="40">
+                <span>ARSIVITA</span>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="converter.html">Konversi</a>
+                <a href="watermarker.html">Watermark</a>
+                <a href="#" class="active">Split</a>
+                <a href="merger.html">Merge</a>
+            </nav>
+        </header>
+
+        <!-- App Header -->
+        <section class="app-header">
+            <h1>PDF Splitter</h1>
+            <p>Pisahkan PDF dengan mudah - pilih halaman yang diinginkan dan pertahankan kualitas asli</p>
+        </section>
+
+        <!-- Main Card -->
+        <div class="main-content-grid">
+            <div class="content-column">
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-file-upload"></i>
+                        Unggah File PDF
+                    </div>
+                    
+                    <div class="form-group">
+                        <div id="fileUploadArea" class="file-upload-area">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <h3>Klik untuk memilih file PDF</h3>
+                            <div class="file-info" id="fileInfo"><p>Atau drag & drop file di sini</p>Format yang didukung: PDF</div>
+                            <input type="file" id="pdfFile" accept=".pdf">
+                        </div>
+                    </div>
+					
+                    <label>
+                        <i class="fas fa-sliders-h"></i>
+                        Pilihan Output
+                    </label>
+                    <div class="form-group" style="margin-bottom:8px">
+                        <div class="radio-group">
+                            <div class="radio-option selected" id="pdfOption">
+                                <input type="radio" id="outputPdf" name="outputFormat" value="pdf" checked>
+                                <label for="outputPdf"><i class="fas fa-window-restore"></i> File PDF Terpisah</label>
+                            </div>
+                            <div class="radio-option" id="zipOption">
+                                <input type="radio" id="outputZip" name="outputFormat" value="zip">
+                                <label for="outputZip"><i class="fas fa-file-archive"></i> File Gabungan ZIP</label>
+                            </div>
+                        </div>            
+                    </div>
+                </div>
+            </div>
+            <div class="content-column">
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-gear"></i>
+                        Konfigurasi Output
+                    </div>
+
+					<div class="form-group">
+                        <label for="pageRanges">
+                            <i class="fas fa-file-alt"></i>
+                            Range Halaman
+                        </label>
+                        <textarea id="pageRanges" placeholder="Contoh: 1-3, 5, 7-9"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-sliders-h"></i>
+                            Kualitas Output
+                        </label>
+                        <div class="quality-options">
+                            <div class="quality-option selected" id="qualityHigh">
+                                <h4>Kualitas Tinggi</h4>
+                                <p>Resolusi asli terjaga, ukuran file besar</p>
+                            </div>
+                            <div class="quality-option" id="qualityMedium">
+                                <h4>Kualitas Sedang</h4>
+                                <p>Kualitas baik, ukuran optimal</p>
+                            </div>
+                            <div class="quality-option" id="qualityLow">
+                                <h4>Kualitas Rendah</h4>
+                                <p>Hanya untuk dokumen teks</p>
+                            </div>
+                        </div>
+                    </div>
+					<div class="form-group">
+                        <div class="default-text">tidak ada file</div>
+                        <div id="errorMessage" class="error"></div>
+                        <div id="successMessage" class="success"></div>
+                    </div>
+					
+					<div class="form-group" style="margin-bottom:10px">
+                        <button id="splitBtn" class="btn" disabled>
+                            <i class="fas fa-cut"></i>
+                            Proses Split PDF
+                        </button>
+                    </div>
+                </div>
+            </div>      
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progressContainer" class="progress-container">
+            <div class="progress-header">
+                <div class="progress-label">Memproses PDF...</div>
+                <div class="progress-percent" id="progressPercent">0%</div>
+            </div>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+            <div id="progressText" class="progress-text">Mempersiapkan...</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 <b>Arsivita</b> | Dikembangkan <a href="https://instagram.com/tatangaditya">Tatang Aditya</a> untuk aktualisasi Latsar ASN </p>
+    </footer>
+
+    <script>
+        // Set up PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
+
+        // DOM elements
+        const pdfFileInput = document.getElementById('pdfFile');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInfo = document.getElementById('fileInfo');
+        const pageRangesTextarea = document.getElementById('pageRanges');
+        const splitBtn = document.getElementById('splitBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const progressPercent = document.getElementById('progressPercent');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const pdfOption = document.getElementById('pdfOption');
+        const zipOption = document.getElementById('zipOption');
+        const qualityHigh = document.getElementById('qualityHigh');
+        const qualityMedium = document.getElementById('qualityMedium');
+        const qualityLow = document.getElementById('qualityLow');
+        const defaultText = document.querySelector('.default-text');
+
+        // Variables
+        let pdfDoc = null;
+        let totalPages = 0;
+        let pdfBytes = null;
+        let currentQuality = 'high'; // 'high', 'medium', 'low'
+
+        // Event listeners
+        pdfFileInput.addEventListener('change', handleFileSelect);
+        splitBtn.addEventListener('click', splitPdf);
+        
+        // Add drag and drop functionality
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        });
+        
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('dragover');
+        });
+        
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                pdfFileInput.files = e.dataTransfer.files;
+                handleFileSelect({ target: pdfFileInput });
+            }
+        });
+
+        // Radio button selection
+        pdfOption.addEventListener('click', () => {
+            pdfOption.classList.add('selected');
+            zipOption.classList.remove('selected');
+            document.getElementById('outputPdf').checked = true;
+        });
+
+        zipOption.addEventListener('click', () => {
+            zipOption.classList.add('selected');
+            pdfOption.classList.remove('selected');
+            document.getElementById('outputZip').checked = true;
+        });
+
+        // Quality selection
+        qualityHigh.addEventListener('click', () => {
+            setQuality('high');
+        });
+
+        qualityMedium.addEventListener('click', () => {
+            setQuality('medium');
+        });
+
+        qualityLow.addEventListener('click', () => {
+            setQuality('low');
+        });
+
+        function setQuality(quality) {
+            currentQuality = quality;
+            qualityHigh.classList.remove('selected');
+            qualityMedium.classList.remove('selected');
+            qualityLow.classList.remove('selected');
+            
+            if (quality === 'high') {
+                qualityHigh.classList.add('selected');
+            } else if (quality === 'medium') {
+                qualityMedium.classList.add('selected');
+            } else {
+                qualityLow.classList.add('selected');
+            }
+        }
+
+        // Functions
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (file.type !== 'application/pdf') {
+                showError('Silakan pilih file PDF yang valid.');
+                resetForm();
+                return;
+            }
+
+            // Update UI - hanya update fileInfo, tidak menambah elemen baru
+            fileUploadArea.classList.add('has-file');
+            fileInfo.innerHTML = `<p>Klik kembali untuk mengganti file</p>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            
+            // Show loading state
+            splitBtn.disabled = true;
+            splitBtn.innerHTML = '<div class="loading-spinner"></div> Memuat PDF...';
+
+            // Load PDF to get page count and store bytes
+            const fileReader = new FileReader();
+            fileReader.onload = function() {
+                const arrayBuffer = this.result;
+                pdfBytes = new Uint8Array(arrayBuffer);
+                
+                pdfjsLib.getDocument(pdfBytes).promise.then(function(pdf) {
+                    pdfDoc = pdf;
+                    totalPages = pdf.numPages;
+                    
+                    // Enable split button
+                    splitBtn.disabled = false;
+                    splitBtn.innerHTML = '<i class="fas fa-cut"></i> Proses Split PDF';
+                    
+                    // Auto-fill page ranges with all pages
+                    pageRangesTextarea.value = `1-${totalPages}`;
+                    
+                    showSuccess(`PDF berhasil dimuat. Total halaman: ${totalPages}`);
+                }).catch(function(error) {
+                    showError('Gagal memuat PDF: ' + error.message);
+                    resetForm();
+                });
+            };
+            
+            fileReader.readAsArrayBuffer(file);
+        }
+
+        function parsePageRanges(rangeText) {
+            const ranges = [];
+            const parts = rangeText.split(',');
+            
+            for (const part of parts) {
+                const trimmed = part.trim();
+                if (!trimmed) continue;
+                
+                if (trimmed.includes('-')) {
+                    // Range like "1-5"
+                    const [start, end] = trimmed.split('-').map(num => parseInt(num.trim()));
+                    
+                    if (isNaN(start) || isNaN(end)) {
+                        throw new Error(`Format range tidak valid: ${trimmed}`);
+                    }
+                    
+                    if (start > end) {
+                        throw new Error(`Range tidak valid: ${trimmed} (start > end)`);
+                    }
+                    
+                    if (start < 1 || end > totalPages) {
+                        throw new Error(`Range ${trimmed} diluar jumlah halaman PDF (1-${totalPages})`);
+                    }
+                    
+                    ranges.push({ start, end, name: `halaman_${start}-${end}` });
+                } else {
+                    // Single page like "3"
+                    const pageNum = parseInt(trimmed);
+                    
+                    if (isNaN(pageNum)) {
+                        throw new Error(`Format halaman tidak valid: ${trimmed}`);
+                    }
+                    
+                    if (pageNum < 1 || pageNum > totalPages) {
+                        throw new Error(`Halaman ${pageNum} diluar jumlah halaman PDF (1-${totalPages})`);
+                    }
+                    
+                    ranges.push({ start: pageNum, end: pageNum, name: `halaman_${pageNum}` });
+                }
+            }
+            
+            return ranges;
+        }
+
+        function splitPdf() {
+            // Reset UI
+            hideMessages();
+            
+            // Validate inputs
+            if (!pdfDoc || !pdfBytes) {
+                showError('Silakan pilih file PDF terlebih dahulu.');
+                return;
+            }
+            
+            const rangeText = pageRangesTextarea.value.trim();
+            if (!rangeText) {
+                showError('Silakan masukkan range halaman.');
+                return;
+            }
+            
+            // Parse page ranges
+            let ranges;
+            try {
+                ranges = parsePageRanges(rangeText);
+            } catch (error) {
+                showError(error.message);
+                return;
+            }
+            
+            // Get output format
+            const outputFormat = document.querySelector('input[name="outputFormat"]:checked').value;
+            
+            // Show progress
+            progressContainer.style.display = 'block';
+            updateProgress(0, 'Mempersiapkan...');
+            
+            // Disable button during processing
+            splitBtn.disabled = true;
+            splitBtn.innerHTML = '<div class="loading-spinner"></div> Memproses...';
+            
+            // Process PDF splitting
+            if (outputFormat === 'zip') {
+                processAsZip(ranges);
+            } else {
+                processAsIndividual(ranges);
+            }
+        }
+
+        async function processAsZip(ranges) {
+            const zip = new JSZip();
+            let processed = 0;
+            
+            for (const range of ranges) {
+                try {
+                    const pdfBlob = await extractPageRange(range);
+                    zip.file(`${range.name}.pdf`, pdfBlob);
+                    
+                    processed++;
+                    const percent = (processed / ranges.length) * 100;
+                    updateProgress(percent, `Memproses ${range.name}...`);
+                } catch (error) {
+                    showError(`Gagal mengekstrak ${range.name}: ${error.message}`);
+                    resetButton();
+                    return;
+                }
+            }
+            
+            // Generate ZIP
+            updateProgress(100, 'Membuat file ZIP...');
+            
+            zip.generateAsync({ type: 'blob' }).then(function(content) {
+                // Auto-download ZIP
+                const zipName = `pdf_split_${Date.now()}.zip`;
+                saveAs(content, zipName);
+                
+                // Show success
+                showSuccess(`File ZIP berhasil dibuat dengan ${ranges.length} file PDF. File sedang didownload...`);
+                updateProgress(100, 'Selesai! File ZIP sedang didownload...');
+                
+                resetButton();
+                
+                // Hide progress after 3 seconds
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 3000);
+            });
+        }
+
+        async function processAsIndividual(ranges) {
+            let processed = 0;
+            
+            for (const range of ranges) {
+                try {
+                    const pdfBlob = await extractPageRange(range);
+                    const fileName = `${range.name}.pdf`;
+                    
+                    // Auto-download semua file
+                    saveAs(pdfBlob, fileName);
+                    
+                    processed++;
+                    const percent = (processed / ranges.length) * 100;
+                    updateProgress(percent, `Memproses ${range.name}...`);
+                } catch (error) {
+                    showError(`Gagal mengekstrak ${range.name}: ${error.message}`);
+                    resetButton();
+                    return;
+                }
+            }
+            
+            // Show results
+            updateProgress(100, 'Selesai! Semua file sedang didownload...');
+            showSuccess(`Berhasil membuat ${ranges.length} file PDF.`);
+            
+            resetButton();
+            
+            // Hide progress after 3 seconds
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+            }, 3000);
+        }
+
+        async function extractPageRange(range) {
+            const { PDFDocument } = PDFLib;
+            
+            // Load the original PDF
+            const originalPdf = await PDFDocument.load(pdfBytes);
+            const newPdf = await PDFDocument.create();
+            
+            // Copy pages directly from original PDF (preserves original quality and text)
+            const pageIndices = [];
+            for (let i = range.start - 1; i < range.end; i++) {
+                pageIndices.push(i);
+            }
+            
+            const copiedPages = await newPdf.copyPages(originalPdf, pageIndices);
+            copiedPages.forEach(page => {
+                newPdf.addPage(page);
+            });
+            
+            // Save the new PDF
+            const newPdfBytes = await newPdf.save();
+            return new Blob([newPdfBytes], { type: 'application/pdf' });
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = `${percent}%`;
+            progressText.textContent = text;
+            progressPercent.textContent = `${Math.round(percent)}%`;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+            defaultText.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+            defaultText.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            defaultText.style.display = 'block';
+        }
+
+        function resetForm() {
+            pdfDoc = null;
+            pdfBytes = null;
+            totalPages = 0;
+            splitBtn.disabled = true;
+            splitBtn.innerHTML = '<i class="fas fa-cut"></i> Proses Split PDF';
+            progressContainer.style.display = 'none';
+            fileUploadArea.classList.remove('has-file');
+            fileInfo.textContent = 'Format yang didukung: PDF';
+            hideMessages();
+        }
+        
+        function resetButton() {
+            splitBtn.disabled = false;
+            splitBtn.innerHTML = '<i class="fas fa-cut"></i> Proses Split PDF';
+        }
+    </script>
+</body>
+</html>
