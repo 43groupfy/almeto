@@ -183,623 +183,625 @@
     </footer>
 
     <script>
-        // Elemen DOM
-        const dropArea = document.getElementById('dropArea');
-        const fileInput = document.getElementById('fileInput');
-        const preview = document.getElementById('preview');
-        const generateBtn = document.getElementById('generateBtn');
-        const togglePreviewBtn = document.getElementById('togglePreviewBtn');
-        const sortAzBtn = document.getElementById('sortAzBtn');
-        const sortZaBtn = document.getElementById('sortZaBtn');
-        const selectAllBtn = document.getElementById('selectAllBtn');
-        const rotateSelectedBtn = document.getElementById('rotateSelectedBtn');
-        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-        const clearAllBtn = document.getElementById('clearAllBtn');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressFill = document.getElementById('progressFill');
-        const progressText = document.getElementById('progressText');
-        const progressPercent = document.getElementById('progressPercent');
-        const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
-        const pdfFilenameInput = document.getElementById('pdfFilename');
+	// Elemen DOM
+const dropArea = document.getElementById('dropArea');
+const fileInput = document.getElementById('fileInput');
+const preview = document.getElementById('preview');
+const generateBtn = document.getElementById('generateBtn');
+const togglePreviewBtn = document.getElementById('togglePreviewBtn');
+const sortAzBtn = document.getElementById('sortAzBtn');
+const sortZaBtn = document.getElementById('sortZaBtn');
+const selectAllBtn = document.getElementById('selectAllBtn');
+const rotateSelectedBtn = document.getElementById('rotateSelectedBtn');
+const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+const clearAllBtn = document.getElementById('clearAllBtn');
+const progressContainer = document.getElementById('progressContainer');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const progressPercent = document.getElementById('progressPercent');
+const errorMessage = document.getElementById('errorMessage');
+const successMessage = document.getElementById('successMessage');
+const pdfFilenameInput = document.getElementById('pdfFilename');
 
-        // State aplikasi
-        let images = [];
-        let isConverting = false;
-        let conversionCanceled = false;
-        let allSelected = false;
-        let showPreview = true; // State untuk toggle preview
-        let isAscending = true; // State untuk sorting (true = A-Z, false = Z-A)
+// State aplikasi
+let images = [];
+let isConverting = false;
+let conversionCanceled = false;
+let allSelected = false;
+let showPreview = true; // State untuk toggle preview
+let isAscending = true; // State untuk sorting (true = A-Z, false = Z-A)
 
-        // Event listeners
-        fileInput.addEventListener('change', handleFileSelect);
+// Event listeners
+fileInput.addEventListener('change', handleFileSelect);
 
-        // Click pada drop area untuk trigger file input
-        dropArea.addEventListener('click', () => {
-            fileInput.click();
-        });
+// Click pada drop area untuk trigger file input
+dropArea.addEventListener('click', () => {
+    fileInput.click();
+});
 
-        // Drag and drop functionality
-        dropArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropArea.classList.add('dragover');
-        });
+// Drag and drop functionality
+dropArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropArea.classList.add('dragover');
+});
 
-        dropArea.addEventListener('dragleave', () => {
-            dropArea.classList.remove('dragover');
-        });
+dropArea.addEventListener('dragleave', () => {
+    dropArea.classList.remove('dragover');
+});
 
-        dropArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropArea.classList.remove('dragover');
-            const files = Array.from(e.dataTransfer.files);
-            handleFiles(files);
-        });
+dropArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropArea.classList.remove('dragover');
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+});
 
-        // Tombol aksi
-        sortAzBtn.addEventListener('click', () => toggleSort(true));
-        sortZaBtn.addEventListener('click', () => toggleSort(false));
-        selectAllBtn.addEventListener('click', toggleSelectAll);
-        rotateSelectedBtn.addEventListener('click', rotateSelectedImages);
-        deleteSelectedBtn.addEventListener('click', deleteSelectedImages);
-        clearAllBtn.addEventListener('click', resetAll);
-        generateBtn.addEventListener('click', generatePDF);
-        togglePreviewBtn.addEventListener('click', togglePreviewMode);
+// Tombol aksi
+sortAzBtn.addEventListener('click', () => toggleSort(true));
+sortZaBtn.addEventListener('click', () => toggleSort(false));
+selectAllBtn.addEventListener('click', toggleSelectAll);
+rotateSelectedBtn.addEventListener('click', rotateSelectedImages);
+deleteSelectedBtn.addEventListener('click', deleteSelectedImages);
+clearAllBtn.addEventListener('click', resetAll);
+generateBtn.addEventListener('click', generatePDF);
+togglePreviewBtn.addEventListener('click', togglePreviewMode);
 
-        // Validasi input nama file
-        pdfFilenameInput.addEventListener('input', function() {
-            this.value = this.value.replace(/[<>:"/\\|?*]/g, '');
-            if (this.value.length > 100) {
-                this.value = this.value.substring(0, 100);
-            }
-        });
+// Validasi input nama file
+pdfFilenameInput.addEventListener('input', function() {
+    this.value = this.value.replace(/[<>:"/\\|?*]/g, '');
+    if (this.value.length > 100) {
+        this.value = this.value.substring(0, 100);
+    }
+});
 
-        // Fungsi toggle preview mode
-        function togglePreviewMode() {
-            showPreview = !showPreview;
-            updateToggleButton();
-            renderPreview();
-        }
+// Fungsi toggle preview mode
+function togglePreviewMode() {
+    showPreview = !showPreview;
+    updateToggleButton();
+    renderPreview();
+}
 
-        // Fungsi update tampilan tombol toggle
-        function updateToggleButton() {
-            if (showPreview) {
-                togglePreviewBtn.innerHTML = '<i class="fas fa-eye-slash"></i><span class="btn-text">Hide Preview</span>';
-                togglePreviewBtn.classList.remove('hide-mode');
-            } else {
-                togglePreviewBtn.innerHTML = '<i class="fas fa-eye"></i><span class="btn-text">Show Preview</span>';
-                togglePreviewBtn.classList.add('hide-mode');
-            }
-        }
+// Fungsi update tampilan tombol toggle
+function updateToggleButton() {
+    if (showPreview) {
+        togglePreviewBtn.innerHTML = '<i class="fas fa-eye-slash"></i><span class="btn-text">Hide Preview</span>';
+        togglePreviewBtn.classList.remove('hide-mode');
+    } else {
+        togglePreviewBtn.innerHTML = '<i class="fas fa-eye"></i><span class="btn-text">Show Preview</span>';
+        togglePreviewBtn.classList.add('hide-mode');
+    }
+}
 
-        // Fungsi toggle sorting
-        function toggleSort(ascending) {
-            // Jika klik tombol yang sudah aktif, tidak lakukan apa-apa
-            if ((ascending && isAscending) || (!ascending && !isAscending)) {
-                return;
-            }
-            
-            isAscending = ascending;
-            updateSortButtons();
-            sortImages(isAscending);
-        }
+// Fungsi toggle sorting
+function toggleSort(ascending) {
+    // Jika klik tombol yang sudah aktif, tidak lakukan apa-apa
+    if ((ascending && isAscending) || (!ascending && !isAscending)) {
+        return;
+    }
+    
+    isAscending = ascending;
+    updateSortButtons();
+    sortImages(isAscending);
+}
 
-        // Fungsi update tampilan tombol sort
-        function updateSortButtons() {
-            if (isAscending) {
-                sortAzBtn.classList.add('active');
-                sortZaBtn.classList.remove('active');
-                sortAzBtn.innerHTML = '<i class="fas fa-sort-alpha-down"></i><span class="btn-text">A-Z</span>';
-                sortZaBtn.innerHTML = '<i class="fas fa-sort-alpha-down-alt"></i><span class="btn-text">Z-A</span>';
-            } else {
-                sortAzBtn.classList.remove('active');
-                sortZaBtn.classList.add('active');
-                sortAzBtn.innerHTML = '<i class="fas fa-sort-alpha-down"></i><span class="btn-text">A-Z</span>';
-                sortZaBtn.innerHTML = '<i class="fas fa-sort-alpha-down-alt"></i><span class="btn-text">Z-A</span>';
-            }
-        }
+// Fungsi update tampilan tombol sort
+function updateSortButtons() {
+    if (isAscending) {
+        sortAzBtn.classList.add('active');
+        sortZaBtn.classList.remove('active');
+        sortAzBtn.innerHTML = '<i class="fas fa-sort-alpha-down"></i><span class="btn-text">A-Z</span>';
+        sortZaBtn.innerHTML = '<i class="fas fa-sort-alpha-down-alt"></i><span class="btn-text">Z-A</span>';
+    } else {
+        sortAzBtn.classList.remove('active');
+        sortZaBtn.classList.add('active');
+        sortAzBtn.innerHTML = '<i class="fas fa-sort-alpha-down"></i><span class="btn-text">A-Z</span>';
+        sortZaBtn.innerHTML = '<i class="fas fa-sort-alpha-down-alt"></i><span class="btn-text">Z-A</span>';
+    }
+}
 
-        // PERBAIKAN: Fungsi handleFiles yang diperbaiki
-        function handleFiles(files) {
-            if (files.length === 0) return;
-            
-            let filesProcessed = 0;
-            const totalFiles = files.length;
-            const newImages = [];
+// PERBAIKAN: Fungsi handleFiles yang diperbaiki
+function handleFiles(files) {
+    if (files.length === 0) return;
+    
+    // PERBAIKAN: Filter file gambar terlebih dahulu
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length === 0) {
+        showError('Tidak ada file gambar yang valid. Format yang didukung: JPG, PNG, GIF');
+        return;
+    }
 
-            for (let file of files) {
-                if (!file.type.startsWith('image/')) {
-                    filesProcessed++;
-                    if (filesProcessed === totalFiles) {
-                        // Tambahkan gambar baru ke array images
-                        images = [...images, ...newImages];
-                        sortImages(isAscending);
-                        renderPreview();
-                    }
-                    continue;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const imgSrc = e.target.result;
-                    newImages.push({ 
-                        name: file.name, 
-                        src: imgSrc, 
-                        rotation: 0, 
-                        selected: false 
-                    });
-                    
-                    filesProcessed++;
-                    if (filesProcessed === totalFiles) {
-                        // Tambahkan gambar baru ke array images
-                        images = [...images, ...newImages];
-                        sortImages(isAscending);
-                        renderPreview();
-                    }
-                };
-                reader.onerror = () => {
-                    filesProcessed++;
-                    if (filesProcessed === totalFiles) {
-                        // Tambahkan gambar baru ke array images
-                        images = [...images, ...newImages];
-                        sortImages(isAscending);
-                        renderPreview();
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-        }
+    let filesProcessed = 0;
+    const totalFiles = imageFiles.length;
+    const newImages = [];
 
-        // PERBAIKAN: Fungsi handleFileSelect yang diperbaiki
-        function handleFileSelect(e) {
-            if (e.target.files.length === 0) return;
-            
-            // Reset file input value untuk mengizinkan upload file yang sama lagi
-            const files = Array.from(e.target.files);
-            fileInput.value = ''; // Reset input file
-            
-            handleFiles(files);
-        }
-
-        function renderPreview() {
-            // Hapus empty state jika ada
-            const emptyState = preview.querySelector('.converter-empty-state');
-            if (emptyState) {
-                emptyState.remove();
-            }
-            
-            preview.innerHTML = '';
-
-            if (images.length === 0) {
-                const emptyState = document.createElement('div');
-                emptyState.className = 'converter-empty-state';
-                emptyState.innerHTML = `
-                    <i class="fas fa-images"></i>
-                    <p>Belum ada gambar yang diunggah</p>
-                `;
-                preview.appendChild(emptyState);
-                updateUploadArea();
-                return;
-            }
-
-            images.forEach(({ name, src, rotation, selected }, index) => {
-                const container = document.createElement('div');
-                container.className = `preview-item ${selected ? 'selected' : ''}`;
-                container.dataset.index = index;
-
-                if (showPreview) {
-                    container.innerHTML = `
-                        <div class="preview-checkbox">
-                            <input type="checkbox" class="img-checkbox" ${selected ? 'checked' : ''}>
-                        </div>
-                        <img src="${src}" alt="${name}" class="preview-image" loading="lazy" style="transform: rotate(${rotation}deg)">
-                        <div class="preview-name">${name}</div>
-                        <div class="preview-actions">
-                            <button class="preview-action-btn rotate-btn" title="Putar gambar">
-                                <i class="fas fa-redo"></i>
-                            </button>
-                            <button class="preview-action-btn delete-btn" title="Hapus gambar">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML = `
-                        <div class="preview-checkbox">
-                            <input type="checkbox" class="img-checkbox" ${selected ? 'checked' : ''}>
-                        </div>
-                        <div class="preview-name">${name}</div>
-                        <div class="preview-actions">
-                            <button class="preview-action-btn rotate-btn" title="Putar gambar">
-                                <i class="fas fa-redo"></i>
-                            </button>
-                            <button class="preview-action-btn delete-btn" title="Hapus gambar">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    `;
-                }
-
-                // Event listeners untuk elemen dalam preview
-                const checkbox = container.querySelector('.img-checkbox');
-                const rotateBtn = container.querySelector('.rotate-btn');
-                const deleteBtn = container.querySelector('.delete-btn');
-
-                checkbox.addEventListener('change', () => toggleImageSelection(index));
-                rotateBtn.addEventListener('click', () => rotateImage(index));
-                deleteBtn.addEventListener('click', () => deleteSingleImage(index));
-
-                preview.appendChild(container);
+    for (let file of imageFiles) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const imgSrc = e.target.result;
+            newImages.push({ 
+                name: file.name, 
+                src: imgSrc, 
+                rotation: 0, 
+                selected: false 
             });
             
-            updateUploadArea();
-            
-            // Initialize Sortable
-            if (!preview.sortable) {
-                preview.sortable = new Sortable(preview, {
-                    animation: 150,
-                    onEnd: () => {
-                        const newImages = [];
-                        const containers = document.querySelectorAll('.preview-item');
-                        containers.forEach(container => {
-                            const index = parseInt(container.dataset.index);
-                            newImages.push(images[index]);
-                        });
-                        images = newImages;
-                        // Reset tombol sorting ketika drag & drop manual
-                        isAscending = true;
-                        updateSortButtons();
-                        renderPreview();
-                    }
+            filesProcessed++;
+            if (filesProcessed === totalFiles) {
+                // Tambahkan gambar baru ke array images
+                images = [...images, ...newImages];
+                sortImages(isAscending);
+                renderPreview();
+                
+                // PERBAIKAN: Reset value HANYA setelah semua file berhasil diproses
+                fileInput.value = '';
+            }
+        };
+        reader.onerror = () => {
+            filesProcessed++;
+            if (filesProcessed === totalFiles) {
+                // Tambahkan gambar baru ke array images
+                images = [...images, ...newImages];
+                sortImages(isAscending);
+                renderPreview();
+                // PERBAIKAN: Reset value meskipun ada error
+                fileInput.value = '';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// PERBAIKAN: Fungsi handleFileSelect yang diperbaiki
+function handleFileSelect(e) {
+    if (e.target.files.length === 0) return;
+    
+    // PERBAIKAN: Jangan reset value di sini - ini penyebab utama bug
+    const files = Array.from(e.target.files);
+    
+    // PERBAIKAN: Pindahkan reset value ke akhir proses di handleFiles
+    handleFiles(files);
+}
+
+function renderPreview() {
+    // Hapus empty state jika ada
+    const emptyState = preview.querySelector('.converter-empty-state');
+    if (emptyState) {
+        emptyState.remove();
+    }
+    
+    preview.innerHTML = '';
+
+    if (images.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'converter-empty-state';
+        emptyState.innerHTML = `
+            <i class="fas fa-images"></i>
+            <p>Belum ada gambar yang diunggah</p>
+        `;
+        preview.appendChild(emptyState);
+        updateUploadArea();
+        return;
+    }
+
+    images.forEach(({ name, src, rotation, selected }, index) => {
+        const container = document.createElement('div');
+        container.className = `preview-item ${selected ? 'selected' : ''}`;
+        container.dataset.index = index;
+
+        if (showPreview) {
+            container.innerHTML = `
+                <div class="preview-checkbox">
+                    <input type="checkbox" class="img-checkbox" ${selected ? 'checked' : ''}>
+                </div>
+                <img src="${src}" alt="${name}" class="preview-image" loading="lazy" style="transform: rotate(${rotation}deg)">
+                <div class="preview-name">${name}</div>
+                <div class="preview-actions">
+                    <button class="preview-action-btn rotate-btn" title="Putar gambar">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <button class="preview-action-btn delete-btn" title="Hapus gambar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="preview-checkbox">
+                    <input type="checkbox" class="img-checkbox" ${selected ? 'checked' : ''}>
+                </div>
+                <div class="preview-name">${name}</div>
+                <div class="preview-actions">
+                    <button class="preview-action-btn rotate-btn" title="Putar gambar">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <button class="preview-action-btn delete-btn" title="Hapus gambar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        // Event listeners untuk elemen dalam preview
+        const checkbox = container.querySelector('.img-checkbox');
+        const rotateBtn = container.querySelector('.rotate-btn');
+        const deleteBtn = container.querySelector('.delete-btn');
+
+        checkbox.addEventListener('change', () => toggleImageSelection(index));
+        rotateBtn.addEventListener('click', () => rotateImage(index));
+        deleteBtn.addEventListener('click', () => deleteSingleImage(index));
+
+        preview.appendChild(container);
+    });
+    
+    updateUploadArea();
+    
+    // Initialize Sortable
+    if (!preview.sortable) {
+        preview.sortable = new Sortable(preview, {
+            animation: 150,
+            onEnd: () => {
+                const newImages = [];
+                const containers = document.querySelectorAll('.preview-item');
+                containers.forEach(container => {
+                    const index = parseInt(container.dataset.index);
+                    newImages.push(images[index]);
                 });
-            }
-        }
-
-        function updateUploadArea() {
-            if (images.length > 0) {
-                dropArea.classList.add('has-file');
-                document.getElementById('fileInfo').textContent = `${images.length} gambar dipilih`;
-            } else {
-                dropArea.classList.remove('has-file');
-                document.getElementById('fileInfo').textContent = 'Format yang didukung: JPG, PNG, GIF';
-            }
-        }
-
-        function toggleImageSelection(index) {
-            images[index].selected = !images[index].selected;
-            renderPreview();
-        }
-
-        function toggleSelectAll() {
-            allSelected = !allSelected;
-            images.forEach(img => {
-                img.selected = allSelected;
-            });
-            
-            selectAllBtn.innerHTML = allSelected ? 
-                '<i class="fas fa-times-circle"></i><span class="btn-text">Batal Pilih Semua</span>' : 
-                '<i class="fas fa-object-group"></i><span class="btn-text">Pilih Semua</span>';
-                
-            renderPreview();
-        }
-
-        function rotateImage(index) {
-            images[index].rotation = (images[index].rotation + 90) % 360;
-            renderPreview();
-        }
-
-        function rotateSelectedImages() {
-            const hasSelected = images.some(img => img.selected);
-            
-            if (!hasSelected) {
-                showError('Pilih setidaknya satu gambar untuk diputar.');
-                return;
-            }
-            
-            images.forEach((img, index) => {
-                if (img.selected) {
-                    images[index].rotation = (img.rotation + 90) % 360;
-                }
-            });
-            
-            renderPreview();
-        }
-
-        function deleteSingleImage(index) {
-            if (confirm(`Apakah Anda yakin ingin menghapus gambar ${images[index].name}?`)) {
-                images.splice(index, 1);
-                renderPreview();
-            }
-        }
-
-        function deleteSelectedImages() {
-            const hasSelected = images.some(img => img.selected);
-            
-            if (!hasSelected) {
-                showError('Pilih setidaknya satu gambar untuk dihapus.');
-                return;
-            }
-            
-            if (confirm('Apakah Anda yakin ingin menghapus gambar yang dipilih?')) {
-                images = images.filter(img => !img.selected);
-                allSelected = false;
-                selectAllBtn.innerHTML = '<i class="fas fa-object-group"></i><span class="btn-text">Pilih Semua</span>';
-                renderPreview();
-            }
-        }
-
-        function sortImages(ascending = true) {
-            if (images.length === 0) return;
-            
-            images.sort((a, b) => {
-                const nameA = a.name.toLowerCase();
-                const nameB = b.name.toLowerCase();
-                if (nameA < nameB) return ascending ? -1 : 1;
-                if (nameA > nameB) return ascending ? 1 : -1;
-                return 0;
-            });
-            renderPreview();
-        }
-
-        function resetAll() {
-            if (images.length === 0) return;
-            
-            if (confirm('Apakah Anda yakin ingin menghapus semua gambar?')) {
-                images = [];
-                allSelected = false;
-                
-                // Reset tombol
+                images = newImages;
+                // Reset tombol sorting ketika drag & drop manual
                 isAscending = true;
                 updateSortButtons();
-                selectAllBtn.innerHTML = '<i class="fas fa-object-group"></i><span class="btn-text">Pilih Semua</span>';
-                
                 renderPreview();
             }
-        }
-
-		// Tambahkan elemen orientasi kertas ke DOM
-		const paperOrientationSelect = document.getElementById('paperOrientation');
-
-		// UPDATE fungsi generatePDF
-		async function generatePDF() {
-			if (images.length === 0) {
-				showError('Silakan unggah setidaknya satu gambar terlebih dahulu.');
-				return;
-			}
-			
-			// Validasi nama file
-			let filename = pdfFilenameInput.value.trim();
-			if (filename === '') {
-				showError('Silakan masukkan nama file PDF.');
-				pdfFilenameInput.focus();
-				return;
-			}
-			
-			// Tambahkan ekstensi .pdf jika belum ada
-			if (!filename.toLowerCase().endsWith('.pdf')) {
-				filename += '.pdf';
-			}
-			
-			isConverting = true;
-			conversionCanceled = false;
-			generateBtn.disabled = true;
-			
-			showProgress();
-			updateProgress(0, 'Mempersiapkan...');
-			
-			const { jsPDF } = window.jspdf;
-
-			const sizeMap = {
-				F4: [210, 330],
-				A4: [210, 297],
-				A3: [297, 420],
-				Legal: [216, 356],
-				Letter: [216, 279]
-			};
-
-			const selectedSize = document.getElementById('paperSize').value;
-			const selectedOrientation = document.getElementById('paperOrientation').value;
-			const pageSize = sizeMap[selectedSize] || sizeMap['F4'];
-			
-			const totalImages = images.length;
-			let pdf = null;
-			
-			try {
-				for (let i = 0; i < totalImages; i++) {
-					if (conversionCanceled) break;
-					
-					updateProgress((i / totalImages) * 100, `Memproses gambar ${i+1} dari ${totalImages}`);
-					
-					// Simulasi proses
-					await new Promise(resolve => setTimeout(resolve, 300));
-					
-					// Tentukan orientasi halaman berdasarkan setting pengguna
-					let pageOrientation;
-					let pdfPageSize;
-					
-					switch (selectedOrientation) {
-						case 'portrait':
-							// Portrait - selalu portrait
-							pageOrientation = 'portrait';
-							pdfPageSize = pageSize;
-							break;
-							
-						case 'landscape':
-							// Landscape - selalu landscape
-							pageOrientation = 'landscape';
-							pdfPageSize = [pageSize[1], pageSize[0]]; // Tukar dimensi
-							break;
-							
-						case 'adaptif':
-						default:
-							// Adaptif - tentukan berdasarkan rotasi gambar
-							const isLandscape = images[i].rotation === 90 || images[i].rotation === 270;
-							pageOrientation = isLandscape ? 'landscape' : 'portrait';
-							pdfPageSize = pageOrientation === 'landscape' ? [pageSize[1], pageSize[0]] : pageSize;
-							break;
-					}
-					
-					// Buat PDF dengan gambar pertama atau tambah halaman untuk gambar berikutnya
-					if (i === 0) {
-						pdf = new jsPDF({
-							orientation: pageOrientation,
-							unit: 'mm',
-							format: pdfPageSize
-						});
-					} else {
-						pdf.addPage(pdfPageSize, pageOrientation);
-					}
-					
-					const rotatedImg = await rotateImageToCanvas(images[i].src, images[i].rotation);
-					await addImageToPDF(pdf, rotatedImg, pdfPageSize[0], pdfPageSize[1]);
-				}
-				
-				if (!conversionCanceled && pdf) {
-					updateProgress(100, 'Menyimpan PDF...');
-					await new Promise(resolve => setTimeout(resolve, 500));
-					
-					pdf.save(filename);
-					hideProgress();
-					generateBtn.disabled = false;
-					isConverting = false;
-					
-					showSuccess(`PDF berhasil dibuat dan diunduh dengan nama "${filename}"!`);
-				}
-			} catch (error) {
-				console.error('Error generating PDF:', error);
-				showError('Terjadi kesalahan saat membuat PDF. Silakan coba lagi.');
-				hideProgress();
-				generateBtn.disabled = false;
-				isConverting = false;
-			}
-		}
-
-		// Fungsi untuk mendapatkan informasi orientasi (opsional, untuk debugging)
-		function getOrientationInfo() {
-			const selectedOrientation = document.getElementById('paperOrientation').value;
-			const selectedSize = document.getElementById('paperSize').value;
-			
-			console.log(`Orientasi: ${selectedOrientation}, Ukuran: ${selectedSize}`);
-			
-			return {
-				orientation: selectedOrientation,
-				size: selectedSize
-			};
-		}
-
-        function showProgress() {
-            progressContainer.style.display = 'block';
-        }
-
-        function hideProgress() {
-            progressContainer.style.display = 'none';
-        }
-
-        function updateProgress(percent, text) {
-            progressFill.style.width = `${percent}%`;
-            progressText.textContent = text;
-            progressPercent.textContent = `${Math.round(percent)}%`;
-        }
-
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            setTimeout(() => {
-                errorMessage.style.display = 'none';
-            }, 5000);
-        }
-
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            setTimeout(() => {
-                successMessage.style.display = 'none';
-            }, 5000);
-        }
-
-        async function addImageToPDF(pdf, imgData, pageWidth = 210, pageHeight = 330) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = function () {
-                    let imgWidth = img.width;
-                    let imgHeight = img.height;
-                    const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
-                    imgWidth *= ratio;
-                    imgHeight *= ratio;
-                    const x = (pageWidth - imgWidth) / 2;
-                    const y = (pageHeight - imgHeight) / 2;
-                    pdf.addImage(img, 'JPEG', x, y, imgWidth, imgHeight);
-                    resolve();
-                };
-                img.src = imgData;
-            });
-        }
-
-        function rotateImageToCanvas(src, rotation) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = function () {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    if (rotation === 90 || rotation === 270) {
-                        canvas.width = img.height;
-                        canvas.height = img.width;
-                    } else {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                    }
-                    
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.save();
-                    
-                    ctx.translate(canvas.width / 2, canvas.height / 2);
-                    ctx.rotate(rotation * Math.PI / 180);
-                    ctx.drawImage(img, -img.width / 2, -img.height / 2);
-                    
-                    ctx.restore();
-                    
-                    resolve(canvas.toDataURL('image/jpeg', 0.8));
-                };
-                img.src = src;
-            });
-        }
-
-        // Update teks tombol berdasarkan ukuran layar
-        function updateButtonTexts() {
-            const isMobile = window.innerWidth <= 576;
-            const buttons = document.querySelectorAll('.btn, .toggle-preview-btn');
-            
-            buttons.forEach(btn => {
-                const icon = btn.querySelector('i');
-                const textSpan = btn.querySelector('.btn-text');
-                
-                if (isMobile && textSpan) {
-                    // Sembunyikan teks di mobile, tampilkan tooltip
-                    textSpan.style.display = 'none';
-                    btn.title = textSpan.textContent;
-                } else if (textSpan) {
-                    // Tampilkan teks di desktop
-                    textSpan.style.display = 'inline';
-                    btn.title = '';
-                }
-            });
-        }
-
-        // Inisialisasi saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', function() {
-            updateSortButtons(); // Inisialisasi tombol sort
-            updateToggleButton(); // Inisialisasi tombol toggle
-            updateButtonTexts(); // Inisialisasi teks tombol responsive
-            
-            // Setel nama file default
-            const now = new Date();
-            const dateString = now.toISOString().slice(0, 10).replace(/-/g, '');
-            pdfFilenameInput.value = `dokumen_${dateString}`;
         });
+    }
+}
 
-        // Panggil saat resize
-        window.addEventListener('resize', updateButtonTexts);
+function updateUploadArea() {
+    if (images.length > 0) {
+        dropArea.classList.add('has-file');
+        document.getElementById('fileInfo').textContent = `${images.length} gambar dipilih`;
+    } else {
+        dropArea.classList.remove('has-file');
+        document.getElementById('fileInfo').textContent = 'Format yang didukung: JPG, PNG, GIF';
+    }
+}
+
+function toggleImageSelection(index) {
+    images[index].selected = !images[index].selected;
+    renderPreview();
+}
+
+function toggleSelectAll() {
+    allSelected = !allSelected;
+    images.forEach(img => {
+        img.selected = allSelected;
+    });
+    
+    selectAllBtn.innerHTML = allSelected ? 
+        '<i class="fas fa-times-circle"></i><span class="btn-text">Batal Pilih Semua</span>' : 
+        '<i class="fas fa-object-group"></i><span class="btn-text">Pilih Semua</span>';
+        
+    renderPreview();
+}
+
+function rotateImage(index) {
+    images[index].rotation = (images[index].rotation + 90) % 360;
+    renderPreview();
+}
+
+function rotateSelectedImages() {
+    const hasSelected = images.some(img => img.selected);
+    
+    if (!hasSelected) {
+        showError('Pilih setidaknya satu gambar untuk diputar.');
+        return;
+    }
+    
+    images.forEach((img, index) => {
+        if (img.selected) {
+            images[index].rotation = (img.rotation + 90) % 360;
+        }
+    });
+    
+    renderPreview();
+}
+
+function deleteSingleImage(index) {
+    if (confirm(`Apakah Anda yakin ingin menghapus gambar ${images[index].name}?`)) {
+        images.splice(index, 1);
+        renderPreview();
+    }
+}
+
+function deleteSelectedImages() {
+    const hasSelected = images.some(img => img.selected);
+    
+    if (!hasSelected) {
+        showError('Pilih setidaknya satu gambar untuk dihapus.');
+        return;
+    }
+    
+    if (confirm('Apakah Anda yakin ingin menghapus gambar yang dipilih?')) {
+        images = images.filter(img => !img.selected);
+        allSelected = false;
+        selectAllBtn.innerHTML = '<i class="fas fa-object-group"></i><span class="btn-text">Pilih Semua</span>';
+        renderPreview();
+    }
+}
+
+function sortImages(ascending = true) {
+    if (images.length === 0) return;
+    
+    images.sort((a, b) => {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        if (nameA < nameB) return ascending ? -1 : 1;
+        if (nameA > nameB) return ascending ? 1 : -1;
+        return 0;
+    });
+    renderPreview();
+}
+
+function resetAll() {
+    if (images.length === 0) return;
+    
+    if (confirm('Apakah Anda yakin ingin menghapus semua gambar?')) {
+        images = [];
+        allSelected = false;
+        
+        // Reset tombol
+        isAscending = true;
+        updateSortButtons();
+        selectAllBtn.innerHTML = '<i class="fas fa-object-group"></i><span class="btn-text">Pilih Semua</span>';
+        
+        renderPreview();
+    }
+}
+
+// Tambahkan elemen orientasi kertas ke DOM
+const paperOrientationSelect = document.getElementById('paperOrientation');
+
+// UPDATE fungsi generatePDF
+async function generatePDF() {
+    if (images.length === 0) {
+        showError('Silakan unggah setidaknya satu gambar terlebih dahulu.');
+        return;
+    }
+    
+    // Validasi nama file
+    let filename = pdfFilenameInput.value.trim();
+    if (filename === '') {
+        showError('Silakan masukkan nama file PDF.');
+        pdfFilenameInput.focus();
+        return;
+    }
+    
+    // Tambahkan ekstensi .pdf jika belum ada
+    if (!filename.toLowerCase().endsWith('.pdf')) {
+        filename += '.pdf';
+    }
+    
+    isConverting = true;
+    conversionCanceled = false;
+    generateBtn.disabled = true;
+    
+    showProgress();
+    updateProgress(0, 'Mempersiapkan...');
+    
+    const { jsPDF } = window.jspdf;
+
+    const sizeMap = {
+        F4: [210, 330],
+        A4: [210, 297],
+        A3: [297, 420],
+        Legal: [216, 356],
+        Letter: [216, 279]
+    };
+
+    const selectedSize = document.getElementById('paperSize').value;
+    const selectedOrientation = document.getElementById('paperOrientation').value;
+    const pageSize = sizeMap[selectedSize] || sizeMap['F4'];
+    
+    const totalImages = images.length;
+    let pdf = null;
+    
+    try {
+        for (let i = 0; i < totalImages; i++) {
+            if (conversionCanceled) break;
+            
+            updateProgress((i / totalImages) * 100, `Memproses gambar ${i+1} dari ${totalImages}`);
+            
+            // Simulasi proses
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Tentukan orientasi halaman berdasarkan setting pengguna
+            let pageOrientation;
+            let pdfPageSize;
+            
+            switch (selectedOrientation) {
+                case 'portrait':
+                    // Portrait - selalu portrait
+                    pageOrientation = 'portrait';
+                    pdfPageSize = pageSize;
+                    break;
+                    
+                case 'landscape':
+                    // Landscape - selalu landscape
+                    pageOrientation = 'landscape';
+                    pdfPageSize = [pageSize[1], pageSize[0]]; // Tukar dimensi
+                    break;
+                    
+                case 'adaptif':
+                default:
+                    // Adaptif - tentukan berdasarkan rotasi gambar
+                    const isLandscape = images[i].rotation === 90 || images[i].rotation === 270;
+                    pageOrientation = isLandscape ? 'landscape' : 'portrait';
+                    pdfPageSize = pageOrientation === 'landscape' ? [pageSize[1], pageSize[0]] : pageSize;
+                    break;
+            }
+            
+            // Buat PDF dengan gambar pertama atau tambah halaman untuk gambar berikutnya
+            if (i === 0) {
+                pdf = new jsPDF({
+                    orientation: pageOrientation,
+                    unit: 'mm',
+                    format: pdfPageSize
+                });
+            } else {
+                pdf.addPage(pdfPageSize, pageOrientation);
+            }
+            
+            const rotatedImg = await rotateImageToCanvas(images[i].src, images[i].rotation);
+            await addImageToPDF(pdf, rotatedImg, pdfPageSize[0], pdfPageSize[1]);
+        }
+        
+        if (!conversionCanceled && pdf) {
+            updateProgress(100, 'Menyimpan PDF...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            pdf.save(filename);
+            hideProgress();
+            generateBtn.disabled = false;
+            isConverting = false;
+            
+            showSuccess(`PDF berhasil dibuat dan diunduh dengan nama "${filename}"!`);
+        }
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        showError('Terjadi kesalahan saat membuat PDF. Silakan coba lagi.');
+        hideProgress();
+        generateBtn.disabled = false;
+        isConverting = false;
+    }
+}
+
+// Fungsi untuk mendapatkan informasi orientasi (opsional, untuk debugging)
+function getOrientationInfo() {
+    const selectedOrientation = document.getElementById('paperOrientation').value;
+    const selectedSize = document.getElementById('paperSize').value;
+    
+    console.log(`Orientasi: ${selectedOrientation}, Ukuran: ${selectedSize}`);
+    
+    return {
+        orientation: selectedOrientation,
+        size: selectedSize
+    };
+}
+
+function showProgress() {
+    progressContainer.style.display = 'block';
+}
+
+function hideProgress() {
+    progressContainer.style.display = 'none';
+}
+
+function updateProgress(percent, text) {
+    progressFill.style.width = `${percent}%`;
+    progressText.textContent = text;
+    progressPercent.textContent = `${Math.round(percent)}%`;
+}
+
+function showError(message) {
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+    setTimeout(() => {
+        errorMessage.style.display = 'none';
+    }, 5000);
+}
+
+function showSuccess(message) {
+    successMessage.textContent = message;
+    successMessage.style.display = 'block';
+    setTimeout(() => {
+        successMessage.style.display = 'none';
+    }, 5000);
+}
+
+async function addImageToPDF(pdf, imgData, pageWidth = 210, pageHeight = 330) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = function () {
+            let imgWidth = img.width;
+            let imgHeight = img.height;
+            const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+            imgWidth *= ratio;
+            imgHeight *= ratio;
+            const x = (pageWidth - imgWidth) / 2;
+            const y = (pageHeight - imgHeight) / 2;
+            pdf.addImage(img, 'JPEG', x, y, imgWidth, imgHeight);
+            resolve();
+        };
+        img.src = imgData;
+    });
+}
+
+function rotateImageToCanvas(src, rotation) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = function () {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (rotation === 90 || rotation === 270) {
+                canvas.width = img.height;
+                canvas.height = img.width;
+            } else {
+                canvas.width = img.width;
+                canvas.height = img.height;
+            }
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(rotation * Math.PI / 180);
+            ctx.drawImage(img, -img.width / 2, -img.height / 2);
+            
+            ctx.restore();
+            
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = src;
+    });
+}
+
+// Update teks tombol berdasarkan ukuran layar
+function updateButtonTexts() {
+    const isMobile = window.innerWidth <= 576;
+    const buttons = document.querySelectorAll('.btn, .toggle-preview-btn');
+    
+    buttons.forEach(btn => {
+        const icon = btn.querySelector('i');
+        const textSpan = btn.querySelector('.btn-text');
+        
+        if (isMobile && textSpan) {
+            // Sembunyikan teks di mobile, tampilkan tooltip
+            textSpan.style.display = 'none';
+            btn.title = textSpan.textContent;
+        } else if (textSpan) {
+            // Tampilkan teks di desktop
+            textSpan.style.display = 'inline';
+            btn.title = '';
+        }
+    });
+}
+
+// Inisialisasi saat halaman dimuat
+document.addEventListener('DOMContentLoaded', function() {
+    updateSortButtons(); // Inisialisasi tombol sort
+    updateToggleButton(); // Inisialisasi tombol toggle
+    updateButtonTexts(); // Inisialisasi teks tombol responsive
+    
+    // Setel nama file default
+    const now = new Date();
+    const dateString = now.toISOString().slice(0, 10).replace(/-/g, '');
+    pdfFilenameInput.value = `dokumen_${dateString}`;
+});
+
+// Panggil saat resize
+window.addEventListener('resize', updateButtonTexts);
     </script>
 </body>
 </html>
