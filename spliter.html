@@ -8,6 +8,7 @@
     <script src="js/jszip.min.js"></script>
     <script src="js/FileSaver.min.js"></script>
     <script src="js/pdf-lib.min.js"></script>
+    <script src="js/addon.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 	<link rel="icon" type="image/png" href="favicon.ico" sizes="32x32">
@@ -33,52 +34,7 @@
                 <a href="merger.html">Merge</a>  
             </nav>
             <div class="nav-overlay" id="navOverlay"></div>
-        </header>   
-        
-        <!-- Content placeholder untuk demonstrasi -->
-        <div style="padding: 2rem; text-align: center; color: var(--dark);">
-            <h2>Selamat Datang di ARSIVITA</h2>
-            <p style="margin-top: 1rem;">Aplikasi untuk mengelola dokumen PDF Anda dengan mudah</p>
-        </div>
-    
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const menuToggle = document.getElementById('menuToggle');
-            const navLinks = document.getElementById('navLinks');
-            const navOverlay = document.getElementById('navOverlay');
-            
-            function toggleMenu() {
-                menuToggle.classList.toggle('active');
-                navLinks.classList.toggle('active');
-                navOverlay.classList.toggle('active');
-                document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
-            }
-            
-            menuToggle.addEventListener('click', toggleMenu);
-            navOverlay.addEventListener('click', toggleMenu);
-            
-            // Close menu when clicking on a link
-            const navItems = navLinks.querySelectorAll('a');
-            navItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        toggleMenu();
-                    }
-                });
-            });
-            
-            // Close menu on window resize if it becomes desktop view
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768) {
-                    menuToggle.classList.remove('active');
-                    navLinks.classList.remove('active');
-                    navOverlay.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-            });
-        });
-    </script>
+        </header> 
 
         <!-- App Header -->
         <section class="app-header">

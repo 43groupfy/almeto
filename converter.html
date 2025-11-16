@@ -6,26 +6,33 @@
     <title>Konversi Gambar ke PDF | PDF Tools Pro</title>
     <script src="js/jspdf.umd.min.js"></script>
     <script src="js/Sortable.min.js"></script>
+    <script src="js/addon.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
 	<link rel="icon" type="image/png" href="favicon.ico" sizes="32x32">
 </head>
 <body>
     <div class="container">
         <!-- Header -->
-        <header>
-            <div class="logo">
-                <img src="icons/appIcon.png" alt="Splash Logo" width="40" height="40">
-                <span>ARSIVITA</span>
+        <header>  
+            <div class="logo">  
+                <img src="https://43groupfy.github.io/almeto/icons/appIcon.png" alt="Splash Logo" width="40" height="40">  
+                <span>ARSIVITA</span>  
+            </div>  
+            <div class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
             </div>
-            <nav class="nav-links">
-				<a href="index.html">Home</a>
-                <a href="#" class="active">Konversi</a>
-                <a href="watermarker.html">Watermark</a>
-                <a href="spliter.html">Split</a>
-                <a href="merger.html">Merge</a>
+            <nav class="nav-links" id="navLinks">  
+                <a href="index.html">Home</a>  
+                <a href="#" class="active">Konversi</a>  
+                <a href="watermarker.html">Watermark</a>  
+                <a href="spliter.html">Split</a>  
+                <a href="merger.html">Merge</a>  
             </nav>
-        </header>
+            <div class="nav-overlay" id="navOverlay"></div>
+        </header> 
 
         <!-- App Header -->
         <section class="app-header">
@@ -97,7 +104,7 @@
 						</select>
 					</div>
 					
-                    <div class="convert-buttons" style="margin-top: 27px; border-top: 2px dotted #333; padding-top: 15px">
+                    <div class="convert-buttons">
                         <button id="clearAllBtn">
                             <i class="fas fa-broom"></i>
                             Hapus Semua
