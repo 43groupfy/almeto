@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Konversi Gambar ke PDF - Arsivita</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header Navigation -->
+  <header>  
+    <div class="header-container">
+      <div class="logo">  
+        <img src="https://43groupfy.github.io/almeto/icons/appIcon.png" alt="Splash Logo" width="40" height="40">  
+        <span>ARSIVITA</span>  
+      </div>  
+      <div class="menu-toggle" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <nav class="nav-links" id="navLinks">  
+        <a href="../index.html">Home</a>  
+        <a href="#" class="active">Konversi</a>  
+        <a href="../watermark">Watermark</a>  
+        <a href="../split">Split</a>  
+        <a href="../merge">Merge</a>  
+      </nav>
+    </div>
+  </header> 
+<div style="margin-top:30px;">
+    
+</div>
+  <div class="container">
+    <!-- Main Content Grid -->
+    <div class="main-content-grid">
+      <!-- Kolom Kiri: Upload File -->
+      <div class="content-column">
+        <div class="card">
+          <div class="card-title">
+            <i class="fas fa-file-upload"></i>
+            Upload Gambar
+          </div>
+          
+          <div class="file-upload-area" id="dropArea">
+            <div class="upload-icon">
+              <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <h3>Klik untuk memilih gambar</h3>
+            <p>Atau drag & drop file di sini</p>
+            <div class="file-info" id="fileInfo">Format yang didukung: JPG, PNG, GIF</div>
+            <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
+          </div>
+          <div class="convert-buttons">
+            <button id="clearAllBtn">
+              <i class="fas fa-broom"></i>
+              Hapus Semua
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kolom Kanan: Konfigurasi Output -->
+      <div class="content-column">
+        <div class="card">
+          <div class="card-title">
+            <i class="fas fa-cogs"></i>
+            Konfigurasi Output
+          </div>
+
+          <div class="form-group">
+            <label for="pdfFilename">
+              <i class="fas fa-file-signature"></i>
+              Nama File Output
+            </label>
+            <input type="text" id="pdfFilename" class="form-input" placeholder="Masukkan nama file PDF">
+          </div>
+          
+          <div class="form-group">
+            <label for="paperSize">
+              <i class="fas fa-file"></i>
+              Ukuran Kertas
+            </label>
+            <select id="paperSize" class="form-select">
+              <option value="F4" selected>F4 (210 x 330 mm)</option>
+              <option value="A4">A4 (210 x 297 mm)</option>
+              <option value="A3">A3 (297 x 420 mm)</option>
+              <option value="Legal">Legal (216 x 356 mm)</option>
+              <option value="Letter">Letter (216 x 279 mm)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="paperOrientation">
+              <i class="fas fa-compress-alt"></i>
+              Orientasi Kertas
+            </label>
+            <select id="paperOrientation" class="form-select">
+              <option value="adaptif" selected>Adaptif (Otomatis)</option>
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </div>
+
+          <div class="convert-buttons">
+            <button id="generateBtn">
+              <i class="fas fa-file-export"></i>
+              Buat PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tombol-tombol Pengatur Gambar -->
+    <div class="preview-section">
+      <div class="checkbox-option compact-layout">
+        <button class="btn-prev toggle-preview-btn" id="togglePreviewBtn">
+          <i class="fas fa-eye-slash"></i>
+          <span class="btn-text">Hide Preview</span>
+        </button>
+        
+        <button class="btn-prev btn-secondary" id="sortAzBtn">
+          <i class="fas fa-sort-alpha-down"></i>
+          <span class="btn-text">A-Z</span>
+        </button>
+        
+        <button class="btn-prev btn-secondary" id="sortZaBtn">
+          <i class="fas fa-sort-alpha-down-alt"></i>
+          <span class="btn-text">Z-A</span>
+        </button>
+        
+        <button class="btn-prev" id="selectAllBtn">
+          <i class="fas fa-object-group"></i>
+          <span class="btn-text">Pilih Semua</span>
+        </button>
+        
+        <button class="btn-prev" id="rotateSelectedBtn">
+          <i class="fas fa-sync"></i>
+          <span class="btn-text">Putar Terpilih</span>
+        </button>
+        
+        <button class="btn-prev btn-danger" id="deleteSelectedBtn">
+          <i class="fas fa-trash"></i>
+          <span class="btn-text">Hapus Terpilih</span>
+        </button>
+      </div>
+
+      <!-- Preview Area -->
+      <div id="preview" class="preview-container">
+        <div class="converter-empty-state">
+          <i class="fas fa-images"></i>
+          <p>Belum ada gambar yang diunggah</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div id="progressContainer" class="progress-container">
+      <div class="progress-header">
+        <div class="progress-label">Membuat PDF...</div>
+        <div class="progress-percent" id="progressPercent">0%</div>
+      </div>
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <div id="progressText" class="progress-text">Mempersiapkan...</div>
+    </div>
+
+    <!-- Messages -->
+    <div id="errorMessage" class="error"></div>
+    <div id="successMessage" class="success"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>© 2025 <b>Arsivita</b> | Dikembangkan <a href="https://instagram.com/tatangaditya">Tatang Aditya</a> untuk aktualisasi Latsar ASN </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
