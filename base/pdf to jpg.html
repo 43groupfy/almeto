@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konversi PDF ke JPG</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #f8fafc;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area:hover {
+            background-color: #e8f4fc;
+            border-color: #2980b9;
+        }
+        
+        .upload-area i {
+            font-size: 50px;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+        
+        .upload-area p {
+            margin: 10px 0;
+            color: #7f8c8d;
+        }
+        
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .btn-convert {
+            background-color: #2ecc71;
+            width: 100%;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            padding: 15px;
+        }
+        
+        .btn-convert:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-download {
+            background-color: #e74c3c;
+            margin-top: 10px;
+        }
+        
+        .btn-download:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .preview-container {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .preview-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+        
+        .preview-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .page-preview {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .page-preview:hover {
+            transform: scale(1.03);
+        }
+        
+        .page-preview img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .page-number {
+            text-align: center;
+            padding: 8px;
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .progress-container {
+            display: none;
+            margin: 20px 0;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .status-text {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .download-area {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .instructions {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .instructions h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            color: #34495e;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .preview-area {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Konverter PDF ke JPG</h1>
+        <p class="subtitle">Ubah file PDF Anda menjadi gambar JPG dengan mudah</p>
+        
+        <div class="instructions">
+            <h3>Cara Menggunakan:</h3>
+            <ol>
+                <li>Klik area unggah atau seret file PDF ke area tersebut</li>
+                <li>Tunggu hingga pratinjau halaman PDF muncul</li>
+                <li>Klik tombol "Konversi ke JPG" untuk memulai proses</li>
+                <li>Unduh gambar JPG yang telah dikonversi</li>
+            </ol>
+        </div>
+        
+        <div class="upload-area" id="dropArea">
+            <i>📁</i>
+            <h3>Seret file PDF ke sini atau klik untuk memilih</h3>
+            <p>Format file yang didukung: PDF (maks. 10MB)</p>
+            <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+            <button class="btn" id="selectFileBtn">
+                <i>📂</i> Pilih File PDF
+            </button>
+        </div>
+        
+        <div class="preview-container" id="previewContainer">
+            <h3 class="preview-title">Pratinjau Halaman PDF</h3>
+            <div class="preview-area" id="previewArea">
+                <!-- Preview halaman PDF akan ditampilkan di sini -->
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <p class="status-text" id="statusText">Siap untuk mengkonversi</p>
+            
+            <button class="btn btn-convert" id="convertBtn" disabled>
+                <i>🔄</i> Konversi ke JPG
+            </button>
+        </div>
+        
+        <div class="download-area" id="downloadArea">
+            <h3>Konversi Selesai!</h3>
+            <p>File JPG Anda telah siap untuk diunduh.</p>
+            <button class="btn btn-download" id="downloadAllBtn">
+                <i>💾</i> Unduh Semua Gambar (ZIP)
+            </button>
+            <p style="margin-top: 10px; font-size: 0.9rem; color: #7f8c8d;">
+                Catatan: Fitur pengunduhan ZIP memerlukan implementasi server-side. Untuk saat ini, Anda dapat mengklik setiap gambar untuk menyimpannya.
+            </p>
+        </div>
+    </div>
+
+    <script>
+// Set up PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+// Elemen DOM
+const fileInput = document.getElementById('fileInput');
+const selectFileBtn = document.getElementById('selectFileBtn');
+const dropArea = document.getElementById('dropArea');
+const previewContainer = document.getElementById('previewContainer');
+const previewArea = document.getElementById('previewArea');
+const convertBtn = document.getElementById('convertBtn');
+const progressContainer = document.getElementById('progressContainer');
+const progressBar = document.getElementById('progressBar');
+const statusText = document.getElementById('statusText');
+const downloadArea = document.getElementById('downloadArea');
+const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+let pdfDoc = null;
+let totalPages = 0;
+let convertedImages = [];
+
+// Event listeners
+selectFileBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', handleFileSelect);
+convertBtn.addEventListener('click', convertToJPG);
+
+// Drag and drop functionality
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, unhighlight, false);
+});
+
+function highlight() {
+    dropArea.style.backgroundColor = '#e1f0fa';
+    dropArea.style.borderColor = '#2980b9';
+}
+
+function unhighlight() {
+    dropArea.style.backgroundColor = '#f8fafc';
+    dropArea.style.borderColor = '#3498db';
+}
+
+dropArea.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    
+    if (files.length > 0 && files[0].type === 'application/pdf') {
+        fileInput.files = files;
+        handleFileSelect();
+    } else {
+        alert('Silakan unggah file PDF yang valid.');
+    }
+}
+
+// Handle file selection - TANPA BATASAN UKURAN
+function handleFileSelect() {
+    const file = fileInput.files[0];
+    
+    if (!file || file.type !== 'application/pdf') {
+        alert('Silakan pilih file PDF yang valid.');
+        return;
+    }
+    
+    // Tampilkan informasi file
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    statusText.textContent = `Memuat PDF (${fileSizeMB} MB)...`;
+    
+    const fileReader = new FileReader();
+    
+    fileReader.onload = function() {
+        const typedarray = new Uint8Array(this.result);
+        
+        pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+            pdfDoc = pdf;
+            totalPages = pdf.numPages;
+            
+            // Reset state
+            previewArea.innerHTML = '';
+            convertedImages = [];
+            downloadArea.style.display = 'none';
+            
+            // Show preview container
+            previewContainer.style.display = 'block';
+            
+            // Enable convert button
+            convertBtn.disabled = false;
+            statusText.textContent = `PDF dimuat dengan ${totalPages} halaman (${fileSizeMB} MB). Klik "Konversi ke JPG" untuk memulai.`;
+            
+            // Load previews with error handling for large files
+            loadPreviewsWithProgress();
+            
+        }).catch(error => {
+            console.error('Error loading PDF:', error);
+            if (error.name === 'InvalidPDFException') {
+                alert('File PDF tidak valid atau rusak.');
+            } else if (error.name === 'PasswordException') {
+                alert('PDF dilindungi password. Tidak dapat membuka file yang dipassword.');
+            } else {
+                alert('Terjadi kesalahan saat memuat PDF. Pastikan file tidak rusak.');
+            }
+        });
+    };
+    
+    fileReader.onerror = function() {
+        alert('Error membaca file. Pastikan file tidak rusak.');
+    };
+    
+    fileReader.onprogress = function(e) {
+        if (e.lengthComputable) {
+            const percentLoaded = Math.round((e.loaded / e.total) * 100);
+            statusText.textContent = `Memuat file... ${percentLoaded}%`;
+        }
+    };
+    
+    fileReader.readAsArrayBuffer(file);
+}
+
+// Load previews with progress indication for large files
+function loadPreviewsWithProgress() {
+    let pagesLoaded = 0;
+    
+    function loadNextPage() {
+        if (pagesLoaded < totalPages) {
+            const pageNumber = pagesLoaded + 1;
+            renderPagePreview(pageNumber).then(() => {
+                pagesLoaded++;
+                const progress = Math.round((pagesLoaded / totalPages) * 100);
+                statusText.textContent = `Memuat pratinjau... ${progress}% (${pagesLoaded}/${totalPages} halaman)`;
+                
+                // Load next page with slight delay to prevent browser freezing
+                setTimeout(loadNextPage, 100);
+            }).catch(error => {
+                console.error(`Error loading page ${pageNumber}:`, error);
+                pagesLoaded++;
+                loadNextPage();
+            });
+        } else {
+            statusText.textContent = `Pratinjau selesai. ${totalPages} halaman dimuat. Klik "Konversi ke JPG" untuk memulai.`;
+        }
+    }
+    
+    loadNextPage();
+}
+
+// Render page preview dengan Promise
+function renderPagePreview(pageNumber) {
+    return new Promise((resolve, reject) => {
+        pdfDoc.getPage(pageNumber).then(page => {
+            const viewport = page.getViewport({ scale: 0.3 }); // Scale kecil untuk preview cepat
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            
+            page.render(renderContext).promise.then(() => {
+                const imgData = canvas.toDataURL('image/jpeg', 0.7);
+                
+                const pageElement = document.createElement('div');
+                pageElement.className = 'page-preview';
+                
+                const img = document.createElement('img');
+                img.src = imgData;
+                img.alt = `Halaman ${pageNumber}`;
+                
+                const pageNumberElement = document.createElement('div');
+                pageNumberElement.className = 'page-number';
+                pageNumberElement.textContent = `Halaman ${pageNumber}`;
+                
+                pageElement.appendChild(img);
+                pageElement.appendChild(pageNumberElement);
+                previewArea.appendChild(pageElement);
+                
+                resolve();
+            }).catch(reject);
+        }).catch(reject);
+    });
+}
+
+// Convert PDF to JPG dengan optimasi untuk file besar
+function convertToJPG() {
+    progressContainer.style.display = 'block';
+    convertBtn.disabled = true;
+    statusText.textContent = 'Mengkonversi... 0%';
+    
+    convertedImages = [];
+    let currentPage = 1;
+    
+    function convertNextPage() {
+        if (currentPage <= totalPages) {
+            convertPage(currentPage).then(() => {
+                const progress = Math.round((convertedImages.length / totalPages) * 100);
+                progressBar.style.width = `${progress}%`;
+                statusText.textContent = `Mengkonversi... ${progress}% (${convertedImages.length}/${totalPages} halaman)`;
+                
+                currentPage++;
+                
+                // Convert next page with delay untuk menghindari browser freeze
+                setTimeout(convertNextPage, 200);
+            }).catch(error => {
+                console.error(`Error converting page ${currentPage}:`, error);
+                currentPage++;
+                setTimeout(convertNextPage, 200);
+            });
+        } else {
+            // Semua halaman selesai dikonversi
+            statusText.textContent = 'Konversi selesai!';
+            convertBtn.disabled = false;
+            
+            // Show download area
+            downloadArea.style.display = 'block';
+            
+            // Update previews dengan gambar yang sudah dikonversi
+            updatePreviewsWithConvertedImages();
+        }
+    }
+    
+    convertNextPage();
+}
+
+// Convert individual page dengan kualitas yang bisa disesuaikan
+function convertPage(pageNumber) {
+    return new Promise((resolve, reject) => {
+        pdfDoc.getPage(pageNumber).then(page => {
+            // Sesuaikan scale berdasarkan kebutuhan
+            const viewport = page.getViewport({ scale: 1.5 }); // Scale sedang untuk kualitas baik
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            
+            page.render(renderContext).promise.then(() => {
+                // Kualitas JPEG bisa disesuaikan (0.8 = 80% quality)
+                const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                convertedImages.push({
+                    data: imgData,
+                    pageNumber: pageNumber
+                });
+                resolve();
+            }).catch(reject);
+        }).catch(reject);
+    });
+}
+
+// Update previews dengan gambar yang sudah dikonversi
+function updatePreviewsWithConvertedImages() {
+    const previews = previewArea.querySelectorAll('.page-preview img');
+    
+    previews.forEach((preview, index) => {
+        if (convertedImages[index]) {
+            preview.src = convertedImages[index].data;
+            
+            // Buat gambar bisa diklik untuk download
+            preview.style.cursor = 'pointer';
+            preview.title = 'Klik untuk mengunduh gambar ini';
+            preview.addEventListener('click', () => {
+                downloadImage(convertedImages[index].data, `halaman-${index + 1}.jpg`);
+            });
+        }
+    });
+}
+
+// Download individual image
+function downloadImage(dataUrl, filename) {
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Download all images (placeholder untuk implementasi ZIP)
+downloadAllBtn.addEventListener('click', () => {
+    if (convertedImages.length === 0) {
+        alert('Tidak ada gambar yang tersedia untuk diunduh.');
+        return;
+    }
+    
+    // Untuk file besar, beri opsi download individual
+    if (convertedImages.length > 10) {
+        const confirmDownload = confirm(
+            `File memiliki ${convertedImages.length} halaman. ` +
+            `Disarankan untuk mengunduh halaman penting saja. ` +
+            `Lanjutkan mengunduh semua gambar?`
+        );
+        
+        if (!confirmDownload) return;
+    }
+    
+    // Download semua gambar satu per satu (solusi sederhana)
+    let delay = 0;
+    convertedImages.forEach((image, index) => {
+        setTimeout(() => {
+            downloadImage(image.data, `halaman-${index + 1}.jpg`);
+        }, delay);
+        delay += 300; // Delay 300ms antara setiap download
+    });
+    
+    alert(`Mengunduh ${convertedImages.length} gambar... Browser mungkin meminta konfirmasi untuk setiap file.`);
+});
+
+// Optimasi memori untuk file besar
+window.addEventListener('beforeunload', () => {
+    // Clean up resources
+    if (pdfDoc) {
+        pdfDoc.destroy();
+    }
+    convertedImages = [];
+});
+    </script>
+</body>
+</html>

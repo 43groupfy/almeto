@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konversi PDF ke F4</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .app-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .upload-section {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .preview-section {
+            flex: 2;
+            min-width: 500px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #f8fafc;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area:hover {
+            background-color: #e8f4fc;
+            border-color: #2980b9;
+        }
+        
+        .upload-area i {
+            font-size: 50px;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+        
+        .upload-area p {
+            margin: 10px 0;
+            color: #7f8c8d;
+        }
+        
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .btn-convert {
+            background-color: #2ecc71;
+            width: 100%;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            padding: 15px;
+        }
+        
+        .btn-convert:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-download {
+            background-color: #e74c3c;
+            margin-top: 10px;
+        }
+        
+        .btn-download:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .preview-container {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .preview-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+        
+        .preview-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .page-preview {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .page-preview:hover {
+            transform: scale(1.03);
+        }
+        
+        .page-preview img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .page-number {
+            text-align: center;
+            padding: 8px;
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .progress-container {
+            display: none;
+            margin: 20px 0;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .status-text {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .download-area {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .instructions {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .instructions h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            color: #34495e;
+        }
+        
+        .settings-panel {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .settings-panel h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .setting-group {
+            margin-bottom: 15px;
+        }
+        
+        .setting-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .setting-group select, .setting-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .size-info {
+            background-color: #e8f6f3;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .size-info h4 {
+            color: #16a085;
+            margin-bottom: 10px;
+        }
+        
+        .size-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .size-info th, .size-info td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .size-info th {
+            background-color: #d1f2eb;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .upload-section, .preview-section {
+                min-width: 100%;
+            }
+            
+            .preview-area {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Konversi PDF ke Ukuran F4</h1>
+        <p class="subtitle">Ubah ukuran PDF Anda menjadi format F4 (Folio) dengan mudah</p>
+        
+        <div class="instructions">
+            <h3>Cara Menggunakan:</h3>
+            <ol>
+                <li>Klik area unggah atau seret file PDF ke area tersebut</li>
+                <li>Atur orientasi dan margin sesuai kebutuhan</li>
+                <li>Tunggu hingga pratinjau halaman PDF muncul</li>
+                <li>Klik tombol "Konversi ke F4" untuk memulai proses</li>
+                <li>Unduh PDF hasil konversi</li>
+            </ol>
+        </div>
+        
+        <div class="app-container">
+            <div class="upload-section">
+                <div class="upload-area" id="dropArea">
+                    <i>📁</i>
+                    <h3>Seret file PDF ke sini atau klik untuk memilih</h3>
+                    <p>Format file yang didukung: PDF</p>
+                    <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+                    <button class="btn" id="selectFileBtn">
+                        <i>📂</i> Pilih File PDF
+                    </button>
+                </div>
+                
+                <div class="settings-panel">
+                    <h3>Pengaturan Konversi</h3>
+                    
+                    <div class="setting-group">
+                        <label for="orientation">Orientasi Halaman:</label>
+                        <select id="orientation">
+                            <option value="portrait">Portrait (Tegak)</option>
+                            <option value="landscape">Landscape (Mendatar)</option>
+                            <option value="auto">Auto (Sesuai konten)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="margin">Margin (mm):</label>
+                        <input type="number" id="margin" min="0" max="50" value="10">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="scaleMode">Mode Skala:</label>
+                        <select id="scaleMode">
+                            <option value="fit">Sesuaikan dengan halaman F4</option>
+                            <option value="fill">Isi penuh halaman F4</option>
+                            <option value="stretch">Regangkan ke halaman F4</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <p class="status-text" id="statusText">Pilih file PDF untuk memulai</p>
+                
+                <button class="btn btn-convert" id="convertBtn" disabled>
+                    <i>🔄</i> Konversi ke F4
+                </button>
+                
+                <div class="download-area" id="downloadArea">
+                    <h3>Konversi Selesai!</h3>
+                    <p>PDF Anda telah berhasil dikonversi ke ukuran F4.</p>
+                    <button class="btn btn-download" id="downloadBtn">
+                        <i>💾</i> Unduh PDF F4
+                    </button>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <div class="preview-container" id="previewContainer">
+                    <h3 class="preview-title">Pratinjau Halaman PDF</h3>
+                    <div class="preview-area" id="previewArea">
+                        <!-- Preview halaman PDF akan ditampilkan di sini -->
+                    </div>
+                </div>
+                
+                <div class="size-info">
+                    <h4>Informasi Ukuran Kertas</h4>
+                    <table>
+                        <tr>
+                            <th>Ukuran</th>
+                            <th>Dimensi (mm)</th>
+                            <th>Dimensi (inchi)</th>
+                        </tr>
+                        <tr>
+                            <td>F4 / Folio</td>
+                            <td>210 × 330</td>
+                            <td>8.27 × 12.99</td>
+                        </tr>
+                        <tr>
+                            <td>A4</td>
+                            <td>210 × 297</td>
+                            <td>8.27 × 11.69</td>
+                        </tr>
+                        <tr>
+                            <td>Letter</td>
+                            <td>216 × 279</td>
+                            <td>8.5 × 11</td>
+                        </tr>
+                        <tr>
+                            <td>Legal</td>
+                            <td>216 × 356</td>
+                            <td>8.5 × 14</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// Set up PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+// Elemen DOM
+const fileInput = document.getElementById('fileInput');
+const selectFileBtn = document.getElementById('selectFileBtn');
+const dropArea = document.getElementById('dropArea');
+const previewContainer = document.getElementById('previewContainer');
+const previewArea = document.getElementById('previewArea');
+const convertBtn = document.getElementById('convertBtn');
+const progressContainer = document.getElementById('progressContainer');
+const progressBar = document.getElementById('progressBar');
+const statusText = document.getElementById('statusText');
+const downloadArea = document.getElementById('downloadArea');
+const downloadBtn = document.getElementById('downloadBtn');
+const orientationSelect = document.getElementById('orientation');
+const marginInput = document.getElementById('margin');
+const scaleModeSelect = document.getElementById('scaleMode');
+
+// Konstanta ukuran F4 dalam mm dan points (1 mm = 2.83465 points)
+const F4_WIDTH_MM = 210;
+const F4_HEIGHT_MM = 330;
+const F4_WIDTH_PT = F4_WIDTH_MM * 2.83465;
+const F4_HEIGHT_PT = F4_HEIGHT_MM * 2.83465;
+
+let pdfDocs = [];
+let totalFiles = 0;
+let totalPages = 0;
+let convertedPdfs = [];
+let currentProcessingFile = 0;
+
+// Ubah file input untuk multiple files
+fileInput.setAttribute('multiple', 'multiple');
+
+// Update UI untuk multiple files
+const uploadAreaText = dropArea.querySelector('p');
+if (uploadAreaText) {
+    uploadAreaText.textContent = 'Format file yang didukung: PDF (bisa multiple files)';
+}
+
+// Event listeners
+selectFileBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', handleFilesSelect);
+convertBtn.addEventListener('click', convertAllToF4);
+downloadBtn.addEventListener('click', downloadAllConvertedPdfs);
+
+// Drag and drop functionality untuk multiple files
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, unhighlight, false);
+});
+
+function highlight() {
+    dropArea.style.backgroundColor = '#e1f0fa';
+    dropArea.style.borderColor = '#2980b9';
+}
+
+function unhighlight() {
+    dropArea.style.backgroundColor = '#f8fafc';
+    dropArea.style.borderColor = '#3498db';
+}
+
+dropArea.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    
+    if (files.length > 0) {
+        // Filter hanya file PDF
+        const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf');
+        
+        if (pdfFiles.length > 0) {
+            fileInput.files = createFileList(pdfFiles);
+            handleFilesSelect();
+        } else {
+            alert('Silakan unggah file PDF yang valid.');
+        }
+    }
+}
+
+// Helper function untuk create FileList dari array files
+function createFileList(files) {
+    const dataTransfer = new DataTransfer();
+    files.forEach(file => dataTransfer.items.add(file));
+    return dataTransfer.files;
+}
+
+// Handle multiple files selection
+function handleFilesSelect() {
+    const files = fileInput.files;
+    
+    if (!files || files.length === 0) {
+        alert('Silakan pilih file PDF yang valid.');
+        return;
+    }
+
+    // Reset state
+    pdfDocs = [];
+    convertedPdfs = [];
+    currentProcessingFile = 0;
+    totalFiles = files.length;
+    totalPages = 0;
+
+    // Tampilkan informasi files
+    const fileNames = Array.from(files).map(file => file.name).join(', ');
+    statusText.textContent = `Memuat ${files.length} file PDF...`;
+
+    // Load semua PDF files
+    loadAllPdfFiles(files);
+}
+
+// Load semua PDF files
+async function loadAllPdfFiles(files) {
+    previewArea.innerHTML = '';
+    let loadedFiles = 0;
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        try {
+            const pdfDoc = await loadPdfFile(file);
+            pdfDocs.push({
+                doc: pdfDoc,
+                name: file.name,
+                pages: pdfDoc.numPages
+            });
+            
+            totalPages += pdfDoc.numPages;
+            loadedFiles++;
+            
+            // Update progress loading
+            statusText.textContent = `Memuat file... ${loadedFiles}/${files.length} (${totalPages} halaman total)`;
+            
+            // Render preview untuk file pertama
+            if (i === 0) {
+                renderFilePreview(pdfDoc, file.name, 0);
+            }
+            
+        } catch (error) {
+            console.error(`Error loading PDF ${file.name}:`, error);
+            alert(`Error loading ${file.name}: ${error.message}`);
+        }
+    }
+
+    // Show preview container setelah semua file loaded
+    previewContainer.style.display = 'block';
+    convertBtn.disabled = false;
+    
+    // Update status
+    const totalSizeMB = (Array.from(files).reduce((acc, file) => acc + file.size, 0) / (1024 * 1024)).toFixed(2);
+    statusText.textContent = `${files.length} file PDF dimuat (${totalPages} halaman total, ${totalSizeMB} MB). Klik "Konversi ke F4" untuk memulai.`;
+
+    // Tampilkan file list
+    displayFileList();
+}
+
+// Load individual PDF file
+function loadPdfFile(file) {
+    return new Promise((resolve, reject) => {
+        const fileReader = new FileReader();
+        
+        fileReader.onload = function() {
+            const typedarray = new Uint8Array(this.result);
+            
+            pdfjsLib.getDocument(typedarray).promise
+                .then(resolve)
+                .catch(reject);
+        };
+        
+        fileReader.onerror = function() {
+            reject(new Error('Error membaca file.'));
+        };
+        
+        fileReader.readAsArrayBuffer(file);
+    });
+}
+
+// Display file list
+function displayFileList() {
+    const fileListContainer = document.createElement('div');
+    fileListContainer.className = 'file-list';
+    fileListContainer.style.marginBottom = '20px';
+    fileListContainer.style.padding = '15px';
+    fileListContainer.style.backgroundColor = '#f8f9fa';
+    fileListContainer.style.borderRadius = '8px';
+    
+    const fileListTitle = document.createElement('h4');
+    fileListTitle.textContent = `File yang akan dikonversi (${pdfDocs.length} file):`;
+    fileListTitle.style.marginBottom = '10px';
+    fileListTitle.style.color = '#2c3e50';
+    
+    fileListContainer.appendChild(fileListTitle);
+    
+    const fileList = document.createElement('ul');
+    fileList.style.listStyleType = 'none';
+    fileList.style.paddingLeft = '0';
+    
+    pdfDocs.forEach((pdf, index) => {
+        const listItem = document.createElement('li');
+        listItem.style.padding = '8px';
+        listItem.style.borderBottom = '1px solid #ddd';
+        listItem.style.display = 'flex';
+        listItem.style.justifyContent = 'space-between';
+        listItem.style.alignItems = 'center';
+        
+        const fileName = document.createElement('span');
+        fileName.textContent = pdf.name;
+        
+        const pageCount = document.createElement('span');
+        pageCount.textContent = `${pdf.pages} halaman`;
+        pageCount.style.color = '#7f8c8d';
+        pageCount.style.fontSize = '0.9em';
+        
+        listItem.appendChild(fileName);
+        listItem.appendChild(pageCount);
+        fileList.appendChild(listItem);
+    });
+    
+    fileListContainer.appendChild(fileList);
+    
+    // Insert sebelum preview area
+    previewArea.parentNode.insertBefore(fileListContainer, previewArea);
+}
+
+// Render preview untuk file tertentu
+function renderFilePreview(pdfDoc, fileName, fileIndex) {
+    // Clear previous preview
+    previewArea.innerHTML = '';
+    
+    // Add file title
+    const fileTitle = document.createElement('div');
+    fileTitle.className = 'preview-title';
+    fileTitle.textContent = `Pratinjau: ${fileName}`;
+    fileTitle.style.fontSize = '1.1rem';
+    previewArea.appendChild(fileTitle);
+    
+    // Render first few pages
+    const pagesToRender = Math.min(pdfDoc.numPages, 5);
+    
+    for (let i = 1; i <= pagesToRender; i++) {
+        renderPagePreview(pdfDoc, i, fileIndex);
+    }
+    
+    if (pdfDoc.numPages > 5) {
+        const morePages = document.createElement('div');
+        morePages.className = 'page-preview';
+        morePages.innerHTML = `
+            <div style="height: 150px; display: flex; align-items: center; justify-content: center; background: #f0f0f0;">
+                <strong>+${pdfDoc.numPages - 5} halaman lagi</strong>
+            </div>
+            <div class="page-number">Total: ${pdfDoc.numPages} halaman</div>
+        `;
+        previewArea.appendChild(morePages);
+    }
+}
+
+// Render individual page preview
+function renderPagePreview(pdfDoc, pageNumber, fileIndex) {
+    pdfDoc.getPage(pageNumber).then(page => {
+        const viewport = page.getViewport({ scale: 0.3 });
+        
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        const renderContext = {
+            canvasContext: context,
+            viewport: viewport
+        };
+        
+        page.render(renderContext).promise.then(() => {
+            const imgData = canvas.toDataURL('image/jpeg', 0.7);
+            
+            const pageElement = document.createElement('div');
+            pageElement.className = 'page-preview';
+            
+            const img = document.createElement('img');
+            img.src = imgData;
+            img.alt = `File ${fileIndex + 1} - Halaman ${pageNumber}`;
+            
+            const pageNumberElement = document.createElement('div');
+            pageNumberElement.className = 'page-number';
+            pageNumberElement.textContent = `Halaman ${pageNumber}`;
+            
+            pageElement.appendChild(img);
+            pageElement.appendChild(pageNumberElement);
+            previewArea.appendChild(pageElement);
+        });
+    });
+}
+
+// Convert semua PDF files ke F4
+async function convertAllToF4() {
+    progressContainer.style.display = 'block';
+    convertBtn.disabled = true;
+    statusText.textContent = 'Mengkonversi... 0%';
+    convertedPdfs = [];
+    currentProcessingFile = 0;
+
+    try {
+        for (let fileIndex = 0; fileIndex < pdfDocs.length; fileIndex++) {
+            await convertSingleFileToF4(fileIndex);
+            currentProcessingFile++;
+        }
+
+        // Final progress update
+        progressBar.style.width = '100%';
+        statusText.textContent = 'Semua konversi selesai!';
+        
+        // Show download area
+        downloadArea.style.display = 'block';
+        convertBtn.disabled = false;
+        
+    } catch (error) {
+        console.error('Error during conversion:', error);
+        statusText.textContent = 'Terjadi kesalahan selama konversi.';
+        convertBtn.disabled = false;
+        alert('Terjadi kesalahan selama konversi: ' + error.message);
+    }
+}
+
+// Convert single PDF file ke F4
+async function convertSingleFileToF4(fileIndex) {
+    const { PDFDocument, rgb } = PDFLib;
+    const pdfInfo = pdfDocs[fileIndex];
+    const pdfDoc = pdfInfo.doc;
+    const fileName = pdfInfo.name;
+    
+    // Create a new PDF document
+    const newPdfDoc = await PDFDocument.create();
+    
+    // Process each page
+    for (let i = 0; i < pdfDoc.numPages; i++) {
+        const pageNumber = i + 1;
+        
+        // Update progress
+        const overallProgress = Math.round(((fileIndex * pdfDoc.numPages + i) / totalPages) * 100);
+        progressBar.style.width = `${overallProgress}%`;
+        statusText.textContent = `Mengkonversi ${fileName}... ${overallProgress}% (File ${fileIndex + 1}/${pdfDocs.length}, Halaman ${i + 1}/${pdfDoc.numPages})`;
+        
+        // Get the current page
+        const page = await pdfDoc.getPage(pageNumber);
+        
+        // Get page viewport and size
+        const viewport = page.getViewport({ scale: 1.0 });
+        const originalWidth = viewport.width;
+        const originalHeight = viewport.height;
+        
+        // Determine orientation
+        let orientation = orientationSelect.value;
+        if (orientation === 'auto') {
+            orientation = originalWidth > originalHeight ? 'landscape' : 'portrait';
+        }
+        
+        // Calculate dimensions for F4
+        let f4Width, f4Height;
+        if (orientation === 'landscape') {
+            f4Width = F4_HEIGHT_PT;
+            f4Height = F4_WIDTH_PT;
+        } else {
+            f4Width = F4_WIDTH_PT;
+            f4Height = F4_HEIGHT_PT;
+        }
+        
+        // Add a new page with F4 size
+        const newPage = newPdfDoc.addPage([f4Width, f4Height]);
+        
+        // Get margin in points
+        const marginPt = parseFloat(marginInput.value) * 2.83465;
+        
+        // Calculate content area
+        const contentWidth = f4Width - (2 * marginPt);
+        const contentHeight = f4Height - (2 * marginPt);
+        
+        // Calculate scale factor based on scale mode
+        let scaleFactor;
+        const scaleMode = scaleModeSelect.value;
+        
+        if (scaleMode === 'fit') {
+            // Fit content to page while maintaining aspect ratio
+            const widthRatio = contentWidth / originalWidth;
+            const heightRatio = contentHeight / originalHeight;
+            scaleFactor = Math.min(widthRatio, heightRatio);
+        } else if (scaleMode === 'fill') {
+            // Fill page while maintaining aspect ratio (may crop)
+            const widthRatio = contentWidth / originalWidth;
+            const heightRatio = contentHeight / originalHeight;
+            scaleFactor = Math.max(widthRatio, heightRatio);
+        } else { // stretch
+            // Stretch to fill page (distorts aspect ratio)
+            scaleFactor = 1; // We'll handle scaling separately for width and height
+        }
+        
+        // Calculate scaled dimensions
+        let scaledWidth, scaledHeight;
+        if (scaleMode === 'stretch') {
+            scaledWidth = contentWidth;
+            scaledHeight = contentHeight;
+        } else {
+            scaledWidth = originalWidth * scaleFactor;
+            scaledHeight = originalHeight * scaleFactor;
+        }
+        
+        // Calculate position to center the content
+        const x = marginPt + (contentWidth - scaledWidth) / 2;
+        const y = marginPt + (contentHeight - scaledHeight) / 2;
+        
+        // Render the page to a canvas
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        
+        // Set canvas size to match the original page
+        canvas.width = originalWidth;
+        canvas.height = originalHeight;
+        
+        const renderContext = {
+            canvasContext: context,
+            viewport: page.getViewport({ scale: 1.0 })
+        };
+        
+        await page.render(renderContext).promise;
+        
+        // Convert canvas to image and embed in new PDF
+        const imageData = canvas.toDataURL('image/jpeg');
+        const image = await newPdfDoc.embedJpg(imageData);
+        
+        // Draw the image on the new page
+        if (scaleMode === 'stretch') {
+            newPage.drawImage(image, {
+                x: x,
+                y: y,
+                width: scaledWidth,
+                height: scaledHeight,
+            });
+        } else {
+            newPage.drawImage(image, {
+                x: x,
+                y: y,
+                width: scaledWidth,
+                height: scaledHeight,
+            });
+        }
+        
+        // Add a border for visual reference (optional)
+        newPage.drawRectangle({
+            x: marginPt,
+            y: marginPt,
+            width: contentWidth,
+            height: contentHeight,
+            borderColor: rgb(0.8, 0.8, 0.8),
+            borderWidth: 1,
+        });
+    }
+    
+    // Save the PDF
+    const pdfBytes = await newPdfDoc.save();
+    
+    // Store converted PDF
+    convertedPdfs.push({
+        name: fileName.replace('.pdf', '.pdf'),
+        data: pdfBytes
+    });
+}
+
+// Download semua PDF yang sudah dikonversi
+function downloadAllConvertedPdfs() {
+    if (!convertedPdfs || convertedPdfs.length === 0) {
+        alert('Tidak ada PDF yang tersedia untuk diunduh.');
+        return;
+    }
+
+    if (convertedPdfs.length === 1) {
+        // Jika hanya satu file, download langsung
+        downloadSinglePdf(convertedPdfs[0]);
+    } else {
+        // Jika multiple files, buat ZIP
+        createZipAndDownload();
+    }
+}
+
+// Download single PDF
+function downloadSinglePdf(pdfFile) {
+    const blob = new Blob([pdfFile.data], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = pdfFile.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    URL.revokeObjectURL(url);
+}
+
+// Create ZIP file untuk multiple PDFs
+async function createZipAndDownload() {
+    try {
+        statusText.textContent = 'Membuat file ZIP...';
+        
+        const zip = new JSZip();
+        
+        // Add semua PDF ke ZIP
+        convertedPdfs.forEach(pdfFile => {
+            zip.file(pdfFile.name, pdfFile.data);
+        });
+        
+        // Generate ZIP file
+        const zipContent = await zip.generateAsync({
+            type: 'blob',
+            compression: 'DEFLATE',
+            compressionOptions: { level: 6 }
+        });
+        
+        // Download ZIP
+        saveAs(zipContent, 'converted_pdfs_F4.zip');
+        
+        statusText.textContent = 'Download ZIP berhasil!';
+        
+    } catch (error) {
+        console.error('Error creating ZIP:', error);
+        alert('Error creating ZIP file: ' + error.message);
+        
+        // Fallback: download files individually
+        alert('Mengunduh file satu per satu...');
+        convertedPdfs.forEach((pdfFile, index) => {
+            setTimeout(() => {
+                downloadSinglePdf(pdfFile);
+            }, index * 500);
+        });
+    }
+}
+
+// Clean up resources
+window.addEventListener('beforeunload', () => {
+    pdfDocs.forEach(pdf => {
+        if (pdf.doc) {
+            pdf.doc.destroy();
+        }
+    });
+    pdfDocs = [];
+    convertedPdfs = [];
+});
+    </script>
+</body>
+</html>

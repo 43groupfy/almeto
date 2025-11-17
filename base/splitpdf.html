@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Splitter - Kualitas Asli Terjaga</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --primary-light: #e0e7ff;
+            --secondary: #7209b7;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --success-dark: #3ab0d6;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --gray: #6c757d;
+            --gray-light: #e9ecef;
+            --border-radius: 12px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --box-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow-lg);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .app-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius-sm);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .file-upload-area {
+            border: 2px dashed var(--primary);
+            border-radius: var(--border-radius-sm);
+            padding: 30px;
+            text-align: center;
+            background-color: var(--primary-light);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .file-upload-area:hover {
+            background-color: #d5deff;
+        }
+
+        .file-upload-area.has-file {
+            border-color: var(--success);
+            background-color: rgba(76, 201, 240, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .file-upload-area.has-file .upload-icon {
+            color: var(--success);
+        }
+
+        .file-info {
+            margin-top: 15px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        .file-upload-area.has-file .file-info {
+            color: var(--success);
+        }
+
+        input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius-sm);
+            resize: vertical;
+            min-height: 120px;
+            font-family: monospace;
+            transition: var(--transition);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 1;
+        }
+
+        .radio-option:hover {
+            border-color: var(--primary);
+        }
+
+        .radio-option.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+
+        .radio-option input {
+            display: none;
+        }
+
+        .quality-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .quality-option {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .quality-option.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+
+        .quality-option h4 {
+            margin-bottom: 5px;
+            color: var(--dark);
+        }
+
+        .quality-option p {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, #5a08a0 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(114, 9, 183, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(114, 9, 183, 0.4);
+        }
+
+        .btn:disabled {
+            background: var(--gray-light);
+            color: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .progress-container {
+            margin: 30px 0;
+            display: none;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: between;
+            margin-bottom: 10px;
+        }
+
+        .progress-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .progress-percent {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            height: 12px;
+            background-color: var(--gray-light);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success) 0%, var(--primary) 100%);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .result {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+
+        .result-summary {
+            color: var(--gray);
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .result-item {
+            background: var(--light);
+            border-radius: var(--border-radius-sm);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: var(--transition);
+        }
+
+        .result-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-name {
+            font-weight: 600;
+            color: var(--dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .result-pages {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: var(--border-radius-sm);
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(76, 201, 240, 0.3);
+        }
+
+        .error {
+            color: var(--danger);
+            background-color: #ffe6ee;
+            padding: 15px;
+            border-radius: var(--border-radius-sm);
+            margin-top: 15px;
+            display: none;
+            border-left: 4px solid var(--danger);
+        }
+
+        .success {
+            color: #2a9d8f;
+            background-color: #e9f7f5;
+            padding: 15px;
+            border-radius: var(--border-radius-sm);
+            margin-top: 15px;
+            display: none;
+            border-left: 4px solid #2a9d8f;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .quality-options {
+                flex-direction: column;
+            }
+            
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="app-icon">📄✂️</div>
+            <h1>PDF Splitter - Kualitas Asli</h1>
+            <p class="subtitle">Pisahkan PDF scan tanpa menurunkan kualitas. Hasil split tetap tajam dan jelas!</p>
+        </header>
+
+        <main style="padding: 30px;">
+            <div class="card">
+                <div class="card-title">
+                    <span>📁</span> Pilih File PDF
+                </div>
+                <div class="form-group">
+                    <div id="fileUploadArea" class="file-upload-area">
+                        <div class="upload-icon">📤</div>
+                        <h3>Klik untuk memilih file PDF</h3>
+                        <p>Atau drag & drop file di sini</p>
+                        <div class="file-info" id="fileInfo">Khusus PDF hasil scan untuk kualitas terbaik</div>
+                        <input type="file" id="pdfFile" accept=".pdf">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="pageRanges">📄 Range Halaman</label>
+                    <textarea id="pageRanges" placeholder="Contoh: 1-3, 5, 7-9"></textarea>
+                    <div class="help-text">
+                        <span>💡</span> Format: gunakan koma untuk memisahkan range. Contoh: 1-3, 5, 7-9 akan menghasilkan 3 file PDF: halaman 1-3, halaman 5, dan halaman 7-9.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>🎚️ Kualitas Output</label>
+                    <div class="quality-options">
+                        <div class="quality-option selected" id="qualityHigh">
+                            <h4>Kualitas Tinggi</h4>
+                            <p>Resolusi asli terjaga</p>
+                            <small>Ukuran file lebih besar</small>
+                        </div>
+                        <div class="quality-option" id="qualityMedium">
+                            <h4>Kualitas Sedang</h4>
+                            <p>Kualitas baik, ukuran optimal</p>
+                            <small>Rekomendasi umum</small>
+                        </div>
+                        <div class="quality-option" id="qualityLow">
+                            <h4>Kualitas Rendah</h4>
+                            <p>Ukuran kecil</p>
+                            <small>Hanya untuk dokumen teks</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📦 Output Format</label>
+                    <div class="radio-group">
+                        <div class="radio-option selected" id="pdfOption">
+                            <input type="radio" id="outputPdf" name="outputFormat" value="pdf" checked>
+                            <label for="outputPdf">File PDF Terpisah (Auto-download semua)</label>
+                        </div>
+                        <div class="radio-option" id="zipOption">
+                            <input type="radio" id="outputZip" name="outputFormat" value="zip">
+                            <label for="outputZip">File ZIP (Semua PDF dalam satu file)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="splitBtn" class="btn btn-primary" disabled>
+                    <span>Proses Split PDF</span>
+                </button>
+
+                <div id="errorMessage" class="error"></div>
+                <div id="successMessage" class="success"></div>
+            </div>
+
+            <div id="progressContainer" class="progress-container">
+                <div class="progress-header">
+                    <div class="progress-label">Memproses PDF...</div>
+                    <div class="progress-percent" id="progressPercent">0%</div>
+                </div>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressText" class="progress-text">Mempersiapkan...</div>
+            </div>
+
+            <div id="result" class="result">
+                <div class="result-header">
+                    <div class="result-title">File yang Dihasilkan</div>
+                    <div class="result-summary" id="resultSummary"></div>
+                </div>
+                <div class="result-grid" id="resultGrid"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>PDF Splitter &copy; 2023 - Kualitas Asli Terjaga</p>
+        </footer>
+    </div>
+
+    <script>
+        // Set up PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
+
+        // DOM elements
+        const pdfFileInput = document.getElementById('pdfFile');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInfo = document.getElementById('fileInfo');
+        const pageRangesTextarea = document.getElementById('pageRanges');
+        const splitBtn = document.getElementById('splitBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const progressPercent = document.getElementById('progressPercent');
+        const resultDiv = document.getElementById('result');
+        const resultGrid = document.getElementById('resultGrid');
+        const resultSummary = document.getElementById('resultSummary');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const pdfOption = document.getElementById('pdfOption');
+        const zipOption = document.getElementById('zipOption');
+        const qualityHigh = document.getElementById('qualityHigh');
+        const qualityMedium = document.getElementById('qualityMedium');
+        const qualityLow = document.getElementById('qualityLow');
+
+        // Variables
+        let pdfDoc = null;
+        let totalPages = 0;
+        let currentQuality = 'high'; // 'high', 'medium', 'low'
+
+        // Event listeners
+        pdfFileInput.addEventListener('change', handleFileSelect);
+        splitBtn.addEventListener('click', splitPdf);
+        
+        // Add drag and drop functionality
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('drag-over');
+        });
+        
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('drag-over');
+        });
+        
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                pdfFileInput.files = e.dataTransfer.files;
+                handleFileSelect({ target: pdfFileInput });
+            }
+        });
+
+        // Radio button selection
+        pdfOption.addEventListener('click', () => {
+            pdfOption.classList.add('selected');
+            zipOption.classList.remove('selected');
+            document.getElementById('outputPdf').checked = true;
+        });
+
+        zipOption.addEventListener('click', () => {
+            zipOption.classList.add('selected');
+            pdfOption.classList.remove('selected');
+            document.getElementById('outputZip').checked = true;
+        });
+
+        // Quality selection
+        qualityHigh.addEventListener('click', () => {
+            setQuality('high');
+        });
+
+        qualityMedium.addEventListener('click', () => {
+            setQuality('medium');
+        });
+
+        qualityLow.addEventListener('click', () => {
+            setQuality('low');
+        });
+
+        function setQuality(quality) {
+            currentQuality = quality;
+            qualityHigh.classList.remove('selected');
+            qualityMedium.classList.remove('selected');
+            qualityLow.classList.remove('selected');
+            
+            if (quality === 'high') {
+                qualityHigh.classList.add('selected');
+            } else if (quality === 'medium') {
+                qualityMedium.classList.add('selected');
+            } else {
+                qualityLow.classList.add('selected');
+            }
+        }
+
+        // Functions
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (file.type !== 'application/pdf') {
+                showError('Silakan pilih file PDF yang valid.');
+                resetForm();
+                return;
+            }
+
+            // Update UI
+            fileUploadArea.classList.add('has-file');
+            fileInfo.textContent = `File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            
+            // Show loading state
+            splitBtn.disabled = true;
+            splitBtn.innerHTML = '<div class="loading-spinner"></div> Memuat PDF...';
+
+            // Load PDF to get page count
+            const fileReader = new FileReader();
+            fileReader.onload = function() {
+                const typedarray = new Uint8Array(this.result);
+                
+                pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                    pdfDoc = pdf;
+                    totalPages = pdf.numPages;
+                    
+                    // Enable split button
+                    splitBtn.disabled = false;
+                    splitBtn.innerHTML = '<span>Proses Split PDF</span>';
+                    
+                    // Auto-fill page ranges with all pages
+                    pageRangesTextarea.value = `1-${totalPages}`;
+                    
+                    showSuccess(`PDF berhasil dimuat. Total halaman: ${totalPages}`);
+                }).catch(function(error) {
+                    showError('Gagal memuat PDF: ' + error.message);
+                    resetForm();
+                });
+            };
+            
+            fileReader.readAsArrayBuffer(file);
+        }
+
+        function parsePageRanges(rangeText) {
+            const ranges = [];
+            const parts = rangeText.split(',');
+            
+            for (const part of parts) {
+                const trimmed = part.trim();
+                if (!trimmed) continue;
+                
+                if (trimmed.includes('-')) {
+                    // Range like "1-5"
+                    const [start, end] = trimmed.split('-').map(num => parseInt(num.trim()));
+                    
+                    if (isNaN(start) || isNaN(end)) {
+                        throw new Error(`Format range tidak valid: ${trimmed}`);
+                    }
+                    
+                    if (start > end) {
+                        throw new Error(`Range tidak valid: ${trimmed} (start > end)`);
+                    }
+                    
+                    if (start < 1 || end > totalPages) {
+                        throw new Error(`Range ${trimmed} diluar jumlah halaman PDF (1-${totalPages})`);
+                    }
+                    
+                    ranges.push({ start, end, name: `halaman_${start}-${end}` });
+                } else {
+                    // Single page like "3"
+                    const pageNum = parseInt(trimmed);
+                    
+                    if (isNaN(pageNum)) {
+                        throw new Error(`Format halaman tidak valid: ${trimmed}`);
+                    }
+                    
+                    if (pageNum < 1 || pageNum > totalPages) {
+                        throw new Error(`Halaman ${pageNum} diluar jumlah halaman PDF (1-${totalPages})`);
+                    }
+                    
+                    ranges.push({ start: pageNum, end: pageNum, name: `halaman_${pageNum}` });
+                }
+            }
+            
+            return ranges;
+        }
+
+        function splitPdf() {
+            // Reset UI
+            hideMessages();
+            resultDiv.style.display = 'none';
+            
+            // Validate inputs
+            if (!pdfDoc) {
+                showError('Silakan pilih file PDF terlebih dahulu.');
+                return;
+            }
+            
+            const rangeText = pageRangesTextarea.value.trim();
+            if (!rangeText) {
+                showError('Silakan masukkan range halaman.');
+                return;
+            }
+            
+            // Parse page ranges
+            let ranges;
+            try {
+                ranges = parsePageRanges(rangeText);
+            } catch (error) {
+                showError(error.message);
+                return;
+            }
+            
+            // Get output format
+            const outputFormat = document.querySelector('input[name="outputFormat"]:checked').value;
+            
+            // Show progress
+            progressContainer.style.display = 'block';
+            updateProgress(0, 'Mempersiapkan...');
+            
+            // Disable button during processing
+            splitBtn.disabled = true;
+            splitBtn.innerHTML = '<div class="loading-spinner"></div> Memproses...';
+            
+            // Process PDF splitting
+            if (outputFormat === 'zip') {
+                processAsZip(ranges);
+            } else {
+                processAsIndividual(ranges);
+            }
+        }
+
+        async function processAsZip(ranges) {
+            const zip = new JSZip();
+            let processed = 0;
+            
+            for (const range of ranges) {
+                try {
+                    const pdfBlob = await extractPageRange(range);
+                    zip.file(`${range.name}.pdf`, pdfBlob);
+                    
+                    processed++;
+                    const percent = (processed / ranges.length) * 100;
+                    updateProgress(percent, `Memproses ${range.name}...`);
+                } catch (error) {
+                    showError(`Gagal mengekstrak ${range.name}: ${error.message}`);
+                    resetButton();
+                    return;
+                }
+            }
+            
+            // Generate ZIP
+            updateProgress(100, 'Membuat file ZIP...');
+            
+            zip.generateAsync({ type: 'blob' }).then(function(content) {
+                // Auto-download ZIP
+                const zipName = `pdf_split_${Date.now()}.zip`;
+                saveAs(content, zipName);
+                
+                // Show success
+                showSuccess(`File ZIP berhasil dibuat dengan ${ranges.length} file PDF. File sedang didownload...`);
+                updateProgress(100, 'Selesai! File ZIP sedang didownload...');
+                
+                // Show result summary
+                showResultSummary(ranges, 'zip', zipName);
+                resetButton();
+            });
+        }
+
+        async function processAsIndividual(ranges) {
+            const results = [];
+            let processed = 0;
+            
+            for (const range of ranges) {
+                try {
+                    const pdfBlob = await extractPageRange(range);
+                    const fileName = `${range.name}.pdf`;
+                    
+                    // Auto-download semua file
+                    saveAs(pdfBlob, fileName);
+                    
+                    // Create download link
+                    const url = URL.createObjectURL(pdfBlob);
+                    results.push({
+                        name: fileName,
+                        url: url,
+                        pages: range.start === range.end ? 
+                            `Halaman ${range.start}` : 
+                            `Halaman ${range.start}-${range.end}`
+                    });
+                    
+                    processed++;
+                    const percent = (processed / ranges.length) * 100;
+                    updateProgress(percent, `Memproses ${range.name}...`);
+                } catch (error) {
+                    showError(`Gagal mengekstrak ${range.name}: ${error.message}`);
+                    resetButton();
+                    return;
+                }
+            }
+            
+            // Show results
+            updateProgress(100, 'Selesai! Semua file sedang didownload...');
+            showSuccess(`Berhasil membuat ${ranges.length} file PDF. Semua file sedang didownload otomatis!`);
+            
+            showResultSummary(results, 'pdf');
+            resetButton();
+        }
+
+        async function extractPageRange(range) {
+            // Create a new PDF document
+            const { PDFDocument } = PDFLib;
+            const newPdf = await PDFDocument.create();
+            
+            // Copy pages from original PDF using the original content
+            // This method preserves the original quality
+            for (let i = range.start; i <= range.end; i++) {
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: 1.0 });
+                
+                // Determine quality settings based on user selection
+                let scale, quality;
+                switch(currentQuality) {
+                    case 'high':
+                        scale = 2.0;  // High resolution
+                        quality = 1.0; // Maximum quality
+                        break;
+                    case 'medium':
+                        scale = 1.5;  // Medium resolution
+                        quality = 0.9; // High quality
+                        break;
+                    case 'low':
+                        scale = 1.0;  // Original resolution
+                        quality = 0.8; // Good quality
+                        break;
+                }
+                
+                const scaledViewport = page.getViewport({ scale: scale });
+                
+                // Create canvas to render page
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = scaledViewport.height;
+                canvas.width = scaledViewport.width;
+                
+                // Render page to canvas with higher quality
+                await page.render({
+                    canvasContext: context,
+                    viewport: scaledViewport,
+                    intent: 'print' // Use print intent for better quality
+                }).promise;
+                
+                // Convert canvas to image with configurable quality
+                const imageFormat = 'image/jpeg';
+                const imageData = canvas.toDataURL(imageFormat, quality);
+                
+                let image;
+                if (imageFormat === 'image/jpeg') {
+                    image = await newPdf.embedJpg(imageData);
+                } else {
+                    image = await newPdf.embedPng(imageData);
+                }
+                
+                const pageWidth = image.width;
+                const pageHeight = image.height;
+                
+                const newPage = newPdf.addPage([pageWidth, pageHeight]);
+                newPage.drawImage(image, {
+                    x: 0,
+                    y: 0,
+                    width: pageWidth,
+                    height: pageHeight,
+                });
+            }
+            
+            // Save as blob
+            const pdfBytes = await newPdf.save();
+            return new Blob([pdfBytes], { type: 'application/pdf' });
+        }
+
+        function showResultSummary(data, format, zipName = '') {
+            resultDiv.style.display = 'block';
+            resultSummary.textContent = `${data.length} file dihasilkan (Kualitas: ${currentQuality === 'high' ? 'Tinggi' : currentQuality === 'medium' ? 'Sedang' : 'Rendah'})`;
+            
+            if (format === 'zip') {
+                resultGrid.innerHTML = `
+                    <div class="result-item">
+                        <div class="result-info">
+                            <div class="result-name">${zipName}</div>
+                            <div class="result-pages">Berisi ${data.length} file PDF</div>
+                        </div>
+                        <a href="#" id="downloadZip" class="download-btn">Download Ulang ZIP</a>
+                    </div>
+                `;
+                
+                document.getElementById('downloadZip').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showSuccess('File ZIP sudah diunduh. Periksa folder download Anda.');
+                });
+            } else {
+                let html = '';
+                
+                data.forEach(item => {
+                    html += `
+                        <div class="result-item">
+                            <div class="result-info">
+                                <div class="result-name">${item.name}</div>
+                                <div class="result-pages">${item.pages}</div>
+                            </div>
+                            <a href="${item.url}" download="${item.name}" class="download-btn">Download Ulang</a>
+                        </div>
+                    `;
+                });
+                
+                resultGrid.innerHTML = html;
+            }
+        }
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = `${percent}%`;
+            progressText.textContent = text;
+            progressPercent.textContent = `${Math.round(percent)}%`;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+        }
+
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+
+        function resetForm() {
+            pdfDoc = null;
+            totalPages = 0;
+            splitBtn.disabled = true;
+            splitBtn.innerHTML = '<span>Proses Split PDF</span>';
+            progressContainer.style.display = 'none';
+            resultDiv.style.display = 'none';
+            fileUploadArea.classList.remove('has-file');
+            fileInfo.textContent = 'Khusus PDF hasil scan untuk kualitas terbaik';
+            hideMessages();
+        }
+        
+        function resetButton() {
+            splitBtn.disabled = false;
+            splitBtn.innerHTML = '<span>Proses Split PDF</span>';
+        }
+    </script>
+</body>
+</html>

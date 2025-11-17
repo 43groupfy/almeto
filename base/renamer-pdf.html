@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced Bulk File Renamer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #7209b7;
+      --success: #06d6a0;
+      --warning: #ffd166;
+      --danger: #ef476f;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --light-gray: #e9ecef;
+      --border-radius: 12px;
+      --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+      color: var(--dark);
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(120deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 25px 30px;
+      text-align: center;
+    }
+
+    h1 {
+      font-weight: 700;
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-weight: 300;
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    .upload-section {
+      padding: 25px 30px;
+      background: var(--light);
+      border-bottom: 1px solid var(--light-gray);
+    }
+
+    .file-input-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .file-input-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      background: white;
+      border: 2px dashed var(--primary);
+      border-radius: var(--border-radius);
+      width: 100%;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .file-input-label:hover {
+      border-color: var(--secondary);
+      background: rgba(67, 97, 238, 0.03);
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
+
+    .file-input-label span {
+      font-weight: 500;
+      color: var(--dark);
+    }
+
+    .file-input-label small {
+      color: var(--gray);
+      margin-top: 5px;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .selected-files {
+      margin-top: 15px;
+      font-size: 0.9rem;
+      color: var(--gray);
+    }
+
+    .tabs {
+      display: flex;
+      background: white;
+      padding: 0 30px;
+      border-bottom: 1px solid var(--light-gray);
+    }
+
+    .tab {
+      padding: 18px 25px;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--gray);
+      border-bottom: 3px solid transparent;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .tab:hover {
+      color: var(--primary-dark);
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .tab-content {
+      padding: 30px;
+      background: white;
+    }
+
+    .pattern-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+      background: var(--light);
+      padding: 20px;
+      border-radius: var(--border-radius);
+      margin-bottom: 20px;
+    }
+
+    .pattern-input {
+      flex: 1;
+      min-width: 120px;
+      padding: 14px;
+      border: 1px solid var(--light-gray);
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+
+    .pattern-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    .pattern-separator {
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+
+    .number-config {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+      background: white;
+      padding: 15px;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--light-gray);
+      margin-bottom: 20px;
+    }
+
+    .number-config label {
+      font-weight: 500;
+      color: var(--dark);
+      min-width: 120px;
+    }
+
+    .number-input {
+      width: 80px;
+      padding: 10px;
+      border: 1px solid var(--light-gray);
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .options-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin: 25px 0;
+    }
+
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .option label {
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .range-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .range-item {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+      background: var(--light);
+      padding: 18px;
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+    }
+
+    .range-item:hover {
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .remove-range {
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .remove-range:hover {
+      background: #d9375f;
+    }
+
+    #addRangeBtn {
+      background: var(--success);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 25px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+      margin-bottom: 20px;
+    }
+
+    #addRangeBtn:hover {
+      background: #05b98a;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      margin: 30px 0;
+    }
+
+    #downloadBtn {
+      background: linear-gradient(120deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 18px 40px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #downloadBtn:hover:enabled {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+    }
+
+    #downloadBtn:disabled {
+      background: var(--light-gray);
+      color: var(--gray);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .preview-section {
+      background: white;
+      padding: 30px;
+      border-top: 1px solid var(--light-gray);
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .preview-header h3 {
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .preview-table-container {
+      overflow-x: auto;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    thead {
+      background: linear-gradient(120deg, var(--primary), var(--secondary));
+      color: white;
+    }
+
+    th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--light-gray);
+      transition: var(--transition);
+    }
+
+    tbody tr:hover {
+      background: rgba(67, 97, 238, 0.03);
+    }
+
+    td {
+      padding: 16px;
+      color: var(--dark);
+    }
+
+    .original-name {
+      color: var(--gray);
+    }
+
+    .new-name {
+      font-weight: 500;
+      color: var(--primary-dark);
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px;
+      color: var(--gray);
+      font-size: 0.9rem;
+      background: var(--light);
+      border-top: 1px solid var(--light-gray);
+    }
+
+    .heart {
+      color: var(--danger);
+    }
+
+    /* Custom checkbox styles */
+    .checkbox-container {
+      display: block;
+      position: relative;
+      padding-left: 35px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .checkbox-container input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    .checkmark {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 22px;
+      width: 22px;
+      background-color: white;
+      border: 2px solid var(--primary);
+      border-radius: 5px;
+    }
+
+    .checkbox-container:hover input ~ .checkmark {
+      background-color: #f1f1f1;
+    }
+
+    .checkbox-container input:checked ~ .checkmark {
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .checkmark:after {
+      content: "";
+      position: absolute;
+      display: none;
+    }
+
+    .checkbox-container input:checked ~ .checkmark:after {
+      display: block;
+    }
+
+    .checkbox-container .checkmark:after {
+      left: 7px;
+      top: 3px;
+      width: 5px;
+      height: 10px;
+      border: solid white;
+      border-width: 0 3px 3px 0;
+      -webkit-transform: rotate(45deg);
+      -ms-transform: rotate(45deg);
+      transform: rotate(45deg);
+    }
+
+    /* Combined drag-drop and preview styles */
+    .preview-list-container {
+      margin-top: 20px;
+      border: 1px solid var(--light-gray);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+    }
+
+    .preview-list-header {
+      background: var(--light);
+      padding: 15px 20px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--light-gray);
+    }
+
+    .preview-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .preview-item {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--light-gray);
+      background: white;
+      transition: var(--transition);
+      cursor: grab;
+    }
+
+    .preview-item:last-child {
+      border-bottom: none;
+    }
+
+    .preview-item:hover {
+      background: #f8f9fa;
+    }
+
+    .preview-item.dragging {
+      background: rgba(67, 97, 238, 0.1);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .preview-item.drag-over {
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .item-handle {
+      margin-right: 15px;
+      color: var(--gray);
+      font-size: 1.2rem;
+    }
+
+    .item-number {
+      background: var(--primary);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-right: 15px;
+    }
+
+    .item-original {
+      flex: 2;
+      font-weight: 500;
+      color: var(--gray);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .item-arrow {
+      margin: 0 15px;
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+
+    .item-new {
+      flex: 2;
+      font-weight: 600;
+      color: var(--primary-dark);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .drag-instruction {
+      padding: 30px;
+      text-align: center;
+      color: var(--gray);
+      font-style: italic;
+      background: var(--light);
+    }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      header {
+        padding: 20px;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .tabs {
+        flex-direction: column;
+        padding: 0;
+      }
+      
+      .tab {
+        text-align: center;
+        padding: 15px;
+      }
+      
+      .pattern-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .number-config {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .range-item {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .options-group {
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      .preview-item {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 15px;
+      }
+      
+      .item-arrow {
+        margin: 8px 0;
+        transform: rotate(90deg);
+      }
+      
+      .item-handle {
+        margin-right: 10px;
+        font-size: 1rem;
+      }
+    }
+
+    /* Animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Advanced Bulk File Renamer</h1>
+      <p class="subtitle">Ubah nama banyak file sekaligus dengan pola yang Anda tentukan</p>
+    </header>
+
+    <section class="upload-section">
+      <div class="file-input-container">
+        <label for="fileInput" class="file-input-label">
+          <div class="upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <span>Pilih file atau tarik ke sini</span>
+          <small>Maksimum 100 file (hanya file yang didukung)</small>
+        </label>
+        <input type="file" id="fileInput" multiple>
+        <div class="selected-files" id="selectedFiles">0 file dipilih</div>
+      </div>
+    </section>
+
+    <div class="tabs">
+      <div class="tab active" id="tabSingle">
+        <i class="fas fa-list-ol"></i> Pola Tunggal
+      </div>
+      <div class="tab" id="tabCustom">
+        <i class="fas fa-layer-group"></i> Rentang Kustom
+      </div>
+    </div>
+
+    <div class="tab-content" id="singlePatternContent">
+      <div class="number-config">
+        <label>Mulai dari angka:</label>
+        <input type="number" id="startNumber" class="number-input" value="1" min="1" max="999">
+        
+        <label>Jumlah digit:</label>
+        <input type="number" id="digitCount" class="number-input" value="2" min="1" max="6">
+      </div>
+      
+      <div class="pattern-group">
+        <input type="text" id="prefix" class="pattern-input" placeholder="Awalan (contoh: IMG_)">
+        <div class="pattern-separator">+</div>
+        <span style="background: #e9ecef; padding: 10px 15px; border-radius: 8px; font-weight: 600;">{{number}}</span>
+        <div class="pattern-separator">+</div>
+        <input type="text" id="suffix" class="pattern-input" placeholder="Akhiran (contoh: _v1)" style="display:none;">
+      </div>
+      
+      <div class="options-group">
+        <label class="checkbox-container">Gunakan Akhiran
+          <input type="checkbox" id="enableSuffixSingle">
+          <span class="checkmark"></span>
+        </label>
+        
+        <label class="checkbox-container">Auto Trim Pola
+          <input type="checkbox" id="autoTrim" checked>
+          <span class="checkmark"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="tab-content" id="customPatternContent" style="display: none;">
+      <div class="range-list" id="rangeList">
+        <!-- Range items will be added here dynamically -->
+      </div>
+      
+      <button id="addRangeBtn" type="button">
+        <i class="fas fa-plus"></i> Tambah Rentang
+      </button>
+      
+      <div class="options-group">
+        <label class="checkbox-container">Gunakan Akhiran
+          <input type="checkbox" id="enableSuffixCustom">
+          <span class="checkmark"></span>
+        </label>
+        
+        <label class="checkbox-container">Auto Trim Pola
+          <input type="checkbox" id="autoTrimCustom" checked>
+          <span class="checkmark"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="preview-list-container">
+      <div class="preview-list-header">
+        <span>Pratinjau & Urutan File (Drag untuk mengubah urutan)</span>
+        <span id="previewCount">0 file</span>
+      </div>
+      <div class="preview-list" id="previewList">
+        <div class="drag-instruction">
+          <i class="fas fa-info-circle"></i> Upload file untuk melihat pratinjau
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button id="downloadBtn" disabled>
+        <i class="fas fa-download"></i> Download ZIP
+      </button>
+    </div>
+
+    <footer>
+      Made with <span class="heart">❤️</span> by You | Advanced Bulk File Renamer v2.0
+    </footer>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
+    // DOM Elements
+    const fileInput = document.getElementById('fileInput');
+    const selectedFiles = document.getElementById('selectedFiles');
+    const previewList = document.getElementById('previewList');
+    const previewCount = document.getElementById('previewCount');
+    const tabSingle = document.getElementById('tabSingle');
+    const tabCustom = document.getElementById('tabCustom');
+    const singlePatternContent = document.getElementById('singlePatternContent');
+    const customPatternContent = document.getElementById('customPatternContent');
+    const enableSuffixSingle = document.getElementById('enableSuffixSingle');
+    const suffix = document.getElementById('suffix');
+    const startNumber = document.getElementById('startNumber');
+    const digitCount = document.getElementById('digitCount');
+    const rangeList = document.getElementById('rangeList');
+    const addRangeBtn = document.getElementById('addRangeBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    // State
+    let files = [];
+    let currentTab = 'single';
+    let draggedItem = null;
+
+    // Initialize
+    function init() {
+      // Add first range item
+      addRangeItem();
+      
+      // Event listeners
+      fileInput.addEventListener('change', handleFileSelect);
+      tabSingle.addEventListener('click', () => switchTab('single'));
+      tabCustom.addEventListener('click', () => switchTab('custom'));
+      enableSuffixSingle.addEventListener('change', toggleSuffix);
+      startNumber.addEventListener('input', updatePreview);
+      digitCount.addEventListener('input', updatePreview);
+      addRangeBtn.addEventListener('click', addRangeItem);
+      downloadBtn.addEventListener('click', downloadZip);
+      
+      // Input events for live preview
+      document.getElementById('prefix').addEventListener('input', updatePreview);
+      document.getElementById('suffix').addEventListener('input', updatePreview);
+      document.getElementById('autoTrim').addEventListener('change', updatePreview);
+    }
+
+    // Handle file selection
+    function handleFileSelect(e) {
+      files = Array.from(e.target.files);
+      selectedFiles.textContent = `${files.length} file dipilih`;
+      
+      updatePreview();
+      
+      if (files.length > 0) {
+        downloadBtn.disabled = false;
+      } else {
+        downloadBtn.disabled = true;
+      }
+    }
+
+    // Switch between tabs
+    function switchTab(tab) {
+      currentTab = tab;
+      
+      if (tab === 'single') {
+        tabSingle.classList.add('active');
+        tabCustom.classList.remove('active');
+        singlePatternContent.style.display = 'block';
+        customPatternContent.style.display = 'none';
+      } else {
+        tabSingle.classList.remove('active');
+        tabCustom.classList.add('active');
+        singlePatternContent.style.display = 'none';
+        customPatternContent.style.display = 'block';
+      }
+      
+      updatePreview();
+    }
+
+    // Toggle suffix visibility
+    function toggleSuffix() {
+      suffix.style.display = enableSuffixSingle.checked ? 'block' : 'none';
+      updatePreview();
+    }
+
+    // Add new range item
+    function addRangeItem() {
+      const rangeItem = document.createElement('div');
+      rangeItem.className = 'range-item fade-in';
+      rangeItem.innerHTML = `
+        <input type="text" class="pattern-input range" placeholder="Rentang (contoh: 1-5)">
+        <input type="text" class="pattern-input prefix" placeholder="Awalan">
+        <span class="pattern-separator">+</span>
+        <span style="background: #e9ecef; padding: 10px 15px; border-radius: 8px; font-weight: 600;">{{number}}</span>
+        <span class="pattern-separator">+</span>
+        <input type="text" class="pattern-input suffix" placeholder="Akhiran" style="display:none;">
+        <button class="remove-range" type="button">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      
+      // Add event listeners to the new inputs
+      const inputs = rangeItem.querySelectorAll('input');
+      inputs.forEach(input => {
+        input.addEventListener('input', updatePreview);
+      });
+      
+      // Toggle suffix based on global setting
+      const suffixInput = rangeItem.querySelector('.suffix');
+      if (document.getElementById('enableSuffixCustom').checked) {
+        suffixInput.style.display = 'block';
+      }
+      
+      // Remove button functionality
+      const removeBtn = rangeItem.querySelector('.remove-range');
+      removeBtn.addEventListener('click', () => {
+        rangeItem.classList.add('fade-in');
+        setTimeout(() => {
+          rangeItem.remove();
+          updatePreview();
+        }, 300);
+      });
+      
+      rangeList.appendChild(rangeItem);
+    }
+
+    // Format number with leading zeros
+    function formatNumber(number, digits) {
+      return number.toString().padStart(digits, '0');
+    }
+
+    // Update preview table
+    function updatePreview() {
+      if (files.length === 0) {
+        previewList.innerHTML = '<div class="drag-instruction"><i class="fas fa-info-circle"></i> Upload file untuk melihat pratinjau</div>';
+        previewCount.textContent = '0 file';
+        return;
+      }
+      
+      previewList.innerHTML = '';
+      previewCount.textContent = `${files.length} file`;
+      
+      // Get number configuration
+      const startNum = parseInt(startNumber.value) || 1;
+      const digits = parseInt(digitCount.value) || 2;
+      
+      // Generate new names based on current tab
+      files.forEach((file, index) => {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'preview-item';
+        previewItem.draggable = true;
+        previewItem.dataset.index = index;
+        
+        const originalName = file.name;
+        let newName = '';
+        
+        if (currentTab === 'single') {
+          const prefix = document.getElementById('prefix').value || '';
+          const suffixValue = enableSuffixSingle.checked ? document.getElementById('suffix').value || '' : '';
+          const number = formatNumber(startNum + index, digits);
+          
+          newName = `${prefix}${number}${suffixValue}${getExtension(originalName)}`;
+        } else {
+          // Custom range logic would go here
+          newName = `file_${formatNumber(startNum + index, digits)}${getExtension(originalName)}`;
+        }
+        
+        previewItem.innerHTML = `
+          <div class="item-handle"><i class="fas fa-grip-lines"></i></div>
+          <div class="item-number">${index + 1}</div>
+          <div class="item-original" title="${originalName}">${originalName}</div>
+          <div class="item-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+          <div class="item-new" title="${newName}">${newName}</div>
+        `;
+        
+        // Add drag and drop event listeners
+        previewItem.addEventListener('dragstart', handleDragStart);
+        previewItem.addEventListener('dragover', handleDragOver);
+        previewItem.addEventListener('dragenter', handleDragEnter);
+        previewItem.addEventListener('dragleave', handleDragLeave);
+        previewItem.addEventListener('drop', handleDrop);
+        previewItem.addEventListener('dragend', handleDragEnd);
+        
+        previewList.appendChild(previewItem);
+      });
+    }
+
+    // Drag and drop functions
+    function handleDragStart(e) {
+      draggedItem = this;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', this.dataset.index);
+      this.classList.add('dragging');
+      
+      // Add slight delay for better visual effect
+      setTimeout(() => {
+        this.style.opacity = '0.5';
+      }, 0);
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDragEnter(e) {
+      e.preventDefault();
+      this.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+      this.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      this.classList.remove('drag-over');
+      
+      if (draggedItem !== this) {
+        // Get the indices of the dragged item and the drop target
+        const fromIndex = parseInt(draggedItem.dataset.index);
+        const toIndex = parseInt(this.dataset.index);
+        
+        // Reorder the files array
+        const movedFile = files.splice(fromIndex, 1)[0];
+        files.splice(toIndex, 0, movedFile);
+        
+        // Update the UI
+        updatePreview();
+      }
+    }
+
+    function handleDragEnd(e) {
+      this.classList.remove('dragging');
+      this.style.opacity = '1';
+      document.querySelectorAll('.preview-item').forEach(item => {
+        item.classList.remove('drag-over');
+      });
+    }
+
+    // Get file extension
+    function getExtension(filename) {
+      return filename.slice(filename.lastIndexOf('.'));
+    }
+
+    // Download ZIP file
+    function downloadZip() {
+      if (files.length === 0) return;
+      
+      const zip = new JSZip();
+      const startNum = parseInt(startNumber.value) || 1;
+      const digits = parseInt(digitCount.value) || 2;
+      
+      files.forEach((file, index) => {
+        let newName = '';
+        
+        if (currentTab === 'single') {
+          const prefix = document.getElementById('prefix').value || '';
+          const suffixValue = enableSuffixSingle.checked ? document.getElementById('suffix').value || '' : '';
+          const number = formatNumber(startNum + index, digits);
+          
+          newName = `${prefix}${number}${suffixValue}${getExtension(file.name)}`;
+        } else {
+          // Custom range logic would go here
+          newName = `file_${formatNumber(startNum + index, digits)}${getExtension(file.name)}`;
+        }
+        
+        zip.file(newName, file);
+      });
+      
+      zip.generateAsync({ type: 'blob' }).then(content => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = 'renamed_files.zip';
+        link.click();
+      });
+    }
+
+    // Initialize the app
+    init();
+  </script>
+</body>
+</html>

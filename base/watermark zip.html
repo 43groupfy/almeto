@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Watermark Otomatis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 25px;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #3498db;
+            background-color: #e8f4fc;
+        }
+        .upload-area.dragover {
+            border-color: #2ecc71;
+            background-color: #e8f8f0;
+        }
+        .file-input {
+            display: none;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        .btn-warning {
+            background-color: #f39c12;
+        }
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+        .file-list {
+            margin-top: 20px;
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #e1e1e1;
+            border-radius: 6px;
+            padding: 15px;
+            background-color: #fff;
+        }
+        .file-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        .status {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        .progress-container {
+            margin-top: 20px;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #3498db);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .watermark-preview {
+            margin-top: 25px;
+            text-align: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .watermark-preview h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .preview-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .preview-item {
+            text-align: center;
+        }
+        .preview-item img {
+            max-width: 150px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .preview-label {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fadbd8;
+            border-radius: 4px;
+            display: none;
+        }
+        .instructions {
+            background-color: #e8f4fc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .instructions ul {
+            margin-bottom: 0;
+        }
+        .watermark-upload {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .watermark-upload input {
+            margin: 5px;
+        }
+        .download-options {
+            margin-top: 15px;
+            text-align: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .download-options h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Aplikasi Watermark Otomatis</h1>
+        <p class="subtitle">Upload file PDF dan dapatkan watermark sesuai orientasi halaman</p>
+        
+        <div class="instructions">
+            <h3>Cara Penggunaan:</h3>
+            <ul>
+                <li>Upload file PDF (drag & drop atau klik tombol)</li>
+                <li>Sistem akan otomatis mendeteksi orientasi tiap halaman</li>
+                <li>Watermark akan disesuaikan (portrait atau landscape)</li>
+                <li>Download file hasil yang sudah di-watermark (individu atau dalam ZIP)</li>
+            </ul>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>Seret file PDF ke sini atau klik untuk memilih file</p>
+            <input type="file" id="fileInput" class="file-input" multiple accept=".pdf">
+            <button class="btn" id="selectFilesBtn">Pilih File PDF</button>
+        </div>
+        
+        <div class="file-list" id="fileList">
+            <p id="noFilesMessage">Belum ada file yang dipilih</p>
+        </div>
+        
+        <div class="watermark-preview">
+            <h3>Konfigurasi Watermark</h3>
+            <p>Upload gambar watermark untuk portrait dan landscape:</p>
+            
+            <div class="watermark-upload">
+                <div>
+                    <label for="portraitWatermark">Watermark Portrait:</label>
+                    <input type="file" id="portraitWatermark" accept=".png,.jpg,.jpeg">
+                </div>
+                <div>
+                    <label for="landscapeWatermark">Watermark Landscape:</label>
+                    <input type="file" id="landscapeWatermark" accept=".png,.jpg,.jpeg">
+                </div>
+            </div>
+            
+            <div class="preview-container">
+                <div class="preview-item">
+                    <img src="" alt="Watermark Portrait Preview" id="previewPortrait" style="display: none;">
+                    <div class="preview-label" id="portraitLabel">Belum diupload</div>
+                </div>
+                <div class="preview-item">
+                    <img src="" alt="Watermark Landscape Preview" id="previewLandscape" style="display: none;">
+                    <div class="preview-label" id="landscapeLabel">Belum diupload</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            <p class="status" id="progressStatus">Siap untuk memproses</p>
+            <div id="errorMessage" class="error"></div>
+        </div>
+        
+        <div class="download-options">
+            <h3>Opsi Download</h3>
+            <button class="btn" id="processBtn" disabled>Proses Watermark</button>
+            <button class="btn btn-success" id="downloadBtn" disabled>Download Semua (Individu)</button>
+            <button class="btn btn-warning" id="downloadZipBtn" disabled>Download ZIP</button>
+        </div>
+    </div>
+
+    <script>
+        // Konfigurasi PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        
+        // Elemen DOM
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const selectFilesBtn = document.getElementById('selectFilesBtn');
+        const fileList = document.getElementById('fileList');
+        const noFilesMessage = document.getElementById('noFilesMessage');
+        const processBtn = document.getElementById('processBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const downloadZipBtn = document.getElementById('downloadZipBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressStatus = document.getElementById('progressStatus');
+        const errorMessage = document.getElementById('errorMessage');
+        const previewPortrait = document.getElementById('previewPortrait');
+        const previewLandscape = document.getElementById('previewLandscape');
+        const portraitWatermarkInput = document.getElementById('portraitWatermark');
+        const landscapeWatermarkInput = document.getElementById('landscapeWatermark');
+        const portraitLabel = document.getElementById('portraitLabel');
+        const landscapeLabel = document.getElementById('landscapeLabel');
+        
+        // Data aplikasi
+        let files = [];
+        let processedFiles = [];
+        let watermarkImages = {
+            portrait: null,
+            landscape: null
+        };
+        
+        // Event listeners
+        selectFilesBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        processBtn.addEventListener('click', processFiles);
+        downloadBtn.addEventListener('click', downloadAll);
+        downloadZipBtn.addEventListener('click', downloadAsZip);
+        portraitWatermarkInput.addEventListener('change', (e) => handleWatermarkUpload(e, 'portrait'));
+        landscapeWatermarkInput.addEventListener('change', (e) => handleWatermarkUpload(e, 'landscape'));
+        
+        // Fungsi untuk handle upload watermark
+        function handleWatermarkUpload(event, type) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        watermarkImages[type] = {
+                            image: img,
+                            dataUrl: e.target.result
+                        };
+                        
+                        // Update preview
+                        const previewElement = type === 'portrait' ? previewPortrait : previewLandscape;
+                        const labelElement = type === 'portrait' ? portraitLabel : landscapeLabel;
+                        
+                        previewElement.src = e.target.result;
+                        previewElement.style.display = 'block';
+                        labelElement.textContent = `${file.name} (${img.width}x${img.height})`;
+                        
+                        updateProcessButton();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // Fungsi untuk menangani pemilihan file
+        function handleFileSelect(e) {
+            const selectedFiles = e.target.files;
+            addFiles(selectedFiles);
+        }
+        
+        // Fungsi untuk menangani drag over
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+        
+        // Fungsi untuk menangani drag leave
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+        
+        // Fungsi untuk menangani drop file
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const droppedFiles = e.dataTransfer.files;
+            addFiles(droppedFiles);
+        }
+        
+        // Fungsi untuk menambahkan file ke daftar
+        function addFiles(fileList) {
+            for (let i = 0; i < fileList.length; i++) {
+                const file = fileList[i];
+                if (file.type === 'application/pdf') {
+                    files.push(file);
+                } else {
+                    showError(`File "${file.name}" bukan file PDF. Hanya file PDF yang didukung.`);
+                }
+            }
+            
+            updateFileList();
+            updateProcessButton();
+        }
+        
+        // Fungsi untuk memperbarui daftar file
+        function updateFileList() {
+            fileList.innerHTML = '';
+            
+            if (files.length === 0) {
+                fileList.appendChild(noFilesMessage);
+                noFilesMessage.style.display = 'block';
+                return;
+            }
+            
+            noFilesMessage.style.display = 'none';
+            
+            files.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                const fileInfo = document.createElement('div');
+                fileInfo.innerHTML = `<strong>${file.name}</strong><br><small>${formatFileSize(file.size)}</small>`;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = 'Hapus';
+                removeBtn.className = 'btn btn-danger';
+                removeBtn.style.padding = '5px 10px';
+                removeBtn.style.fontSize = '12px';
+                removeBtn.addEventListener('click', () => {
+                    files.splice(index, 1);
+                    updateFileList();
+                    updateProcessButton();
+                });
+                
+                fileItem.appendChild(fileInfo);
+                fileItem.appendChild(removeBtn);
+                fileList.appendChild(fileItem);
+            });
+        }
+        
+        // Format ukuran file
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Fungsi untuk memperbarui status tombol proses
+        function updateProcessButton() {
+            processBtn.disabled = files.length === 0 || !watermarkImages.portrait || !watermarkImages.landscape;
+        }
+        
+        // Tampilkan error
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Fungsi utama untuk memproses file
+        async function processFiles() {
+            if (files.length === 0) return;
+            
+            processBtn.disabled = true;
+            downloadBtn.disabled = true;
+            downloadZipBtn.disabled = true;
+            processedFiles = [];
+            errorMessage.textContent = '';
+            errorMessage.style.display = 'none';
+            
+            progressBar.style.width = '0%';
+            progressStatus.textContent = 'Memulai proses...';
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                progressStatus.textContent = `Memproses ${file.name} (${i+1}/${files.length})`;
+                
+                try {
+                    const watermarkedPdf = await addWatermarkToPdf(file);
+                    processedFiles.push({
+                        name: file.name.replace('.pdf', '.pdf'),
+                        blob: watermarkedPdf
+                    });
+                    
+                    // Update progress bar
+                    const progress = ((i + 1) / files.length) * 100;
+                    progressBar.style.width = `${progress}%`;
+                } catch (error) {
+                    console.error(`Error processing ${file.name}:`, error);
+                    showError(`Error memproses ${file.name}: ${error.message}`);
+                }
+            }
+            
+            progressStatus.textContent = `Selesai! ${processedFiles.length} file telah diproses.`;
+            downloadBtn.disabled = processedFiles.length === 0;
+            downloadZipBtn.disabled = processedFiles.length === 0;
+            processBtn.disabled = false;
+        }
+        
+        // Fungsi untuk menambahkan watermark ke PDF
+        async function addWatermarkToPdf(file) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    
+                    // Membuat PDF baru menggunakan jsPDF
+                    const { jsPDF } = window.jspdf;
+                    let newPdf = null;
+                    
+                    // Memproses setiap halaman
+                    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+                        const page = await pdfDoc.getPage(pageNum);
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        
+                        // Menentukan orientasi halaman
+                        const width = viewport.width;
+                        const height = viewport.height;
+                        const isLandscape = width > height;
+                        
+                        // Menentukan watermark yang sesuai
+                        const orientation = isLandscape ? 'landscape' : 'portrait';
+                        const watermarkData = watermarkImages[orientation];
+                        
+                        if (!watermarkData) {
+                            reject(new Error(`Watermark untuk ${orientation} belum diupload`));
+                            return;
+                        }
+                        
+                        // Canvas untuk menggambar halaman PDF
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // Render halaman PDF ke canvas
+                        await page.render({
+                            canvasContext: ctx,
+                            viewport: viewport
+                        }).promise;
+                        
+                        // Menambahkan watermark
+                        await addWatermarkToCanvas(canvas, watermarkData);
+                        
+                        // Convert canvas ke image data
+                        const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                        
+                        // Menambahkan halaman ke PDF baru
+                        if (pageNum === 1) {
+                            newPdf = new jsPDF({
+                                orientation: isLandscape ? 'landscape' : 'portrait',
+                                unit: 'px',
+                                format: [width, height]
+                            });
+                            newPdf.addImage(imgData, 'JPEG', 0, 0, width, height, undefined, 'FAST');
+                        } else {
+                            newPdf.addPage([width, height], isLandscape ? 'landscape' : 'portrait');
+                            newPdf.addImage(imgData, 'JPEG', 0, 0, width, height, undefined, 'FAST');
+                        }
+                    }
+                    
+                    // Mengembalikan PDF yang sudah di-watermark sebagai blob
+                    const pdfBlob = newPdf.output('blob');
+                    resolve(pdfBlob);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+        
+        // Fungsi untuk menambahkan watermark ke canvas
+        function addWatermarkToCanvas(canvas, watermarkData) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const ctx = canvas.getContext('2d');
+                    const watermarkImg = watermarkData.image;
+                    
+                    // Menggambar watermark di tengah canvas dengan ukuran 70% dari canvas
+                    const scale = 0.4;
+                    const watermarkWidth = watermarkImg.width * scale;
+                    const watermarkHeight = watermarkImg.height * scale;
+                    
+                    const x = (canvas.width - watermarkWidth) / 2;
+                    const y = (canvas.height - watermarkHeight) / 2;
+                    
+                    // Simpan state canvas
+                    ctx.save();
+                    
+                    // Set transparansi
+                    ctx.globalAlpha = 0.6;
+                    
+                    // Gambar watermark
+                    ctx.drawImage(watermarkImg, x, y, watermarkWidth, watermarkHeight);
+                    
+                    // Restore state canvas
+                    ctx.restore();
+                    
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+        
+        // Fungsi untuk mendownload semua file yang sudah diproses secara individual
+        function downloadAll() {
+            if (processedFiles.length === 0) return;
+            
+            processedFiles.forEach(file => {
+                const url = URL.createObjectURL(file.blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            });
+        }
+        
+        // Fungsi untuk mendownload semua file dalam format ZIP
+        function downloadAsZip() {
+            if (processedFiles.length === 0) return;
+            
+            progressStatus.textContent = 'Membuat file ZIP...';
+            
+            const zip = new JSZip();
+            const folder = zip.folder("pdf_watermarked");
+            
+            // Menambahkan setiap file ke ZIP
+            processedFiles.forEach(file => {
+                folder.file(file.name, file.blob);
+            });
+            
+            // Generate ZIP dan download
+            zip.generateAsync({type:"blob"})
+                .then(function(content) {
+                    saveAs(content, "pdf_watermarked.zip");
+                    progressStatus.textContent = 'File ZIP berhasil diunduh!';
+                })
+                .catch(function(error) {
+                    console.error('Error creating ZIP:', error);
+                    showError('Terjadi kesalahan saat membuat file ZIP');
+                    progressStatus.textContent = 'Gagal membuat file ZIP';
+                });
+        }
+    </script>
+</body>
+</html>
