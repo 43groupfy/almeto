@@ -671,12 +671,17 @@
                 this.thumbnailWidth = 80;
                 this.thumbnailHeight = 100;
                 
+                // F4 dimensions in points (1 point = 1/72 inch)
+                // F4 size: 210mm x 330mm
+                this.F4_PORTRAIT_WIDTH = 595.28;   // 210mm in points
+                this.F4_PORTRAIT_HEIGHT = 935.43;  // 330mm in points
+                this.F4_LANDSCAPE_WIDTH = 935.43;  // 330mm in points  
+                this.F4_LANDSCAPE_HEIGHT = 595.28; // 210mm in points
                 
                 this.initializeElements();
                 this.bindEvents();
-                this.showMessage('Silakan upload PDF untuk memulai.', 'success');
+                this.showMessage('Silakan upload PDF untuk memulai. Output akan dikonversi ke ukuran F4.', 'success');
             }
-
             initializeElements() {
                 // Card elements
                 this.uploadCard = document.getElementById('uploadCard');
@@ -1159,10 +1164,14 @@
                 
                 this.isProcessing = true;
                 this.showLoading(true);
-
+        
                 try {
                     const { PDFDocument, degrees } = PDFLib;
                     const newPdfDoc = await PDFDocument.create();
+                    
+                    // Optimasi metadata
+                    newPdfDoc.setTitle('PDF Rearranged - F4');
+                    newPdfDoc.setAuthor('PDF Rearranger App');
                     
                     for (let i = 0; i < this.thumbnails.length; i++) {
                         const thumb = this.thumbnails[i];
@@ -1178,12 +1187,51 @@
                             copiedPage.setRotation(rotationAngle);
                         }
                         
-                        newPdfDoc.addPage(copiedPage);
+                        // Determine page orientation after rotation
+                        const originalWidth = copiedPage.getWidth();
+                        const originalHeight = copiedPage.getHeight();
+                        const rotation = thumb.rotation || 0;
+                        
+                        // Calculate effective dimensions after rotation
+                        let effectiveWidth, effectiveHeight;
+                        if (rotation === 90 || rotation === 270) {
+                            effectiveWidth = originalHeight;
+                            effectiveHeight = originalWidth;
+                        } else {
+                            effectiveWidth = originalWidth;
+                            effectiveHeight = originalHeight;
+                        }
+                        
+                        // Choose F4 size based on orientation
+                        const isLandscape = effectiveWidth > effectiveHeight;
+                        const f4Width = isLandscape ? this.F4_LANDSCAPE_WIDTH : this.F4_PORTRAIT_WIDTH;
+                        const f4Height = isLandscape ? this.F4_LANDSCAPE_HEIGHT : this.F4_PORTRAIT_HEIGHT;
+                        
+                        // Create new F4 page with correct orientation
+                        const f4Page = newPdfDoc.addPage([f4Width, f4Height]);
+                        
+                        // Calculate scale to fit original page into F4 while maintaining aspect ratio
+                        const scaleX = f4Width / effectiveWidth;
+                        const scaleY = f4Height / effectiveHeight;
+                        const scale = Math.min(scaleX, scaleY);
+                        
+                        // Calculate position to center the page
+                        const x = (f4Width - (effectiveWidth * scale)) / 2;
+                        const y = (f4Height - (effectiveHeight * scale)) / 2;
+                        
+                        // Embed the original page into F4 page
+                        const embeddedPage = await newPdfDoc.embedPage(copiedPage);
+                        f4Page.drawPage(embeddedPage, {
+                            x: x,
+                            y: y,
+                            xScale: scale,
+                            yScale: scale,
+                        });
                     }
                     
                     const pdfBytes = await newPdfDoc.save();
                     this.downloadPdf(pdfBytes);
-                    this.showMessage('PDF berhasil disimpan!', 'success');
+                    this.showMessage(`PDF berhasil disimpan dalam ukuran F4! Ukuran file: ${this.formatFileSize(pdfBytes.byteLength)}`, 'success');
                     
                 } catch (error) {
                     console.error('Error saving PDF:', error);
@@ -1193,7 +1241,17 @@
                     this.showLoading(false);
                 }
             }
-
+        
+            // Tambahkan method helper untuk format file size
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        
+            // getPdfLibRotation method tetap sama
             getPdfLibRotation(rotation) {
                 const { degrees } = PDFLib;
                 switch (rotation) {
@@ -1203,18 +1261,20 @@
                     default: return degrees(0);
                 }
             }
-
+        
+            // downloadPdf method tetap sama
             downloadPdf(pdfBytes) {
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'pdf-rearranged.pdf';
+                a.download = 'pdf-rearranged-f4.pdf';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }
+
 
             enableControls(enabled) {
                 this.moveUp.disabled = !enabled;
