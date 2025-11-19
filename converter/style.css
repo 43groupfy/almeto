@@ -326,6 +326,10 @@ header {
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
   justify-content: center;
+  background: #fff;
+  border: none;
+  border-radius: 15px;
+  padding: 15px 10px;
 }
 
 .btn-prev {
@@ -383,6 +387,9 @@ header {
   justify-content: center;
   min-height: 150px;
   margin-top: 1rem;
+  border-radius: 15px;
+  background: #fff;
+  padding: 2rem 1rem;
 }
 
 .preview-item {
