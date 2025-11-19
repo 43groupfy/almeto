@@ -681,12 +681,15 @@ footer a:hover {
   }
 
   .preview-item {
-    width: 150px;
-    height: 180px;
+    width: 100%;
+    max-width: 130px ;
+    height: 160px;
   }
-
+  
   .preview-image {
-    height: 100px;
+    height: 120px;
+    width: 80%;
+    margin: auto;
   }
   
   .file-upload-area {
@@ -700,11 +703,14 @@ footer a:hover {
   }
   
   .preview-item {
-    width: 140px;
+    width: 100%;
+    max-width: 130px ;
     height: 160px;
   }
   
   .preview-image {
-    height: 90px;
+    height: 120px;
+    width: 80%;
+    margin: auto;
   }
 }
