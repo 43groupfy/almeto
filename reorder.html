@@ -671,17 +671,11 @@
                 this.thumbnailWidth = 80;
                 this.thumbnailHeight = 100;
                 
-                // F4 dimensions in points (1 point = 1/72 inch)
-                // F4 size: 210mm x 330mm
-                this.F4_PORTRAIT_WIDTH = 595.28;   // 210mm in points
-                this.F4_PORTRAIT_HEIGHT = 935.43;  // 330mm in points
-                this.F4_LANDSCAPE_WIDTH = 935.43;  // 330mm in points  
-                this.F4_LANDSCAPE_HEIGHT = 595.28; // 210mm in points
-                
                 this.initializeElements();
                 this.bindEvents();
-                this.showMessage('Silakan upload PDF untuk memulai. Output akan dikonversi ke ukuran F4.', 'success');
+                this.showMessage('Silakan upload PDF untuk memulai.', 'success');
             }
+        
             initializeElements() {
                 // Card elements
                 this.uploadCard = document.getElementById('uploadCard');
@@ -719,7 +713,7 @@
                 this.errorMessage = document.getElementById('errorMessage');
                 this.successMessage = document.getElementById('successMessage');
             }
-
+        
             bindEvents() {
                 // Upload events
                 this.uploadBtn.addEventListener('click', () => this.pdfInput.click());
@@ -741,17 +735,17 @@
                 this.savePdf.addEventListener('click', () => this.saveRearrangedPdf());
                 this.backToUploadBtn.addEventListener('click', () => this.backToUpload());
             }
-
+        
             setupDragAndDrop(dropZone, callback) {
                 dropZone.addEventListener('dragover', (e) => {
                     e.preventDefault();
                     dropZone.classList.add('drag-over');
                 });
-
+        
                 dropZone.addEventListener('dragleave', () => {
                     dropZone.classList.remove('drag-over');
                 });
-
+        
                 dropZone.addEventListener('drop', (e) => {
                     e.preventDefault();
                     dropZone.classList.remove('drag-over');
@@ -767,7 +761,7 @@
                     }
                 });
             }
-
+        
             showInsertPdfDialog() {
                 const input = document.createElement('input');
                 input.type = 'file';
@@ -783,36 +777,36 @@
                 document.body.appendChild(input);
                 input.click();
             }
-
+        
             async handleFileUpload(file, isMainPdf = false) {
                 if (!file || file.type !== 'application/pdf') {
                     this.showError('Harap pilih file PDF yang valid');
                     return;
                 }
-
+        
                 await this.loadPdf(file, isMainPdf);
             }
-
+        
             async handleInsertPdf(files) {
                 if (!this.thumbnails.length) {
                     this.showError('Upload PDF utama terlebih dahulu!');
                     return;
                 }
-
+        
                 for (let file of files) {
                     if (file.type === 'application/pdf') {
                         await this.loadPdf(file, false);
                     }
                 }
             }
-
+        
             async loadPdf(file, isMainPdf = false) {
                 if (this.isProcessing) return;
                 
                 this.isProcessing = true;
                 this.showLoading(true);
                 this.hideMessages();
-
+        
                 try {
                     const arrayBuffer = await file.arrayBuffer();
                     const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -821,7 +815,7 @@
                     const pdfId = `pdf_${Date.now()}`;
                     this.pdfDocs.set(pdfId, pdfDoc);
                     this.originalFiles.set(pdfId, file);
-
+        
                     if (isMainPdf) {
                         // Reset untuk PDF utama
                         this.thumbnails = [];
@@ -832,23 +826,23 @@
                         // Show edit section
                         this.showEditSection();
                     }
-
+        
                     // Generate thumbnails untuk setiap halaman
                     for (let i = 0; i < pdfDoc.numPages; i++) {
                         await this.createThumbnail(pdfId, i);
                     }
-
+        
                     this.updatePageCount();
                     this.initializeSortable();
-
+        
                     if (this.thumbnails.length > 0) {
                         this.showPage(isMainPdf ? 0 : this.thumbnails.length - 1);
                     }
-
+        
                     const action = isMainPdf ? 'diunggah' : 'ditambahkan';
                     this.showMessage(`PDF berhasil ${action}! ${pdfDoc.numPages} halaman ditambahkan.`, 'success');
                     this.enableControls(true);
-
+        
                 } catch (error) {
                     console.error('Error loading PDF:', error);
                     this.showError('Error memuat file PDF: ' + error.message);
@@ -857,7 +851,7 @@
                     this.showLoading(false);
                 }
             }
-
+        
             async createThumbnail(pdfId, pageIndex) {
                 const pdfDoc = this.pdfDocs.get(pdfId);
                 const page = await pdfDoc.getPage(pageIndex + 1);
@@ -897,7 +891,7 @@
                     viewport: thumbnailViewport,
                     transform: [1, 0, 0, 1, x, y]
                 }).promise;
-
+        
                 const thumbnailIndex = this.thumbnails.length;
                 const thumbnail = {
                     id: `thumb_${pdfId}_${pageIndex}`,
@@ -907,11 +901,11 @@
                     rotation: 0,
                     element: this.createThumbnailElement(canvas, thumbnailIndex)
                 };
-
+        
                 this.thumbnails.push(thumbnail);
                 this.thumbnailContainer.appendChild(thumbnail.element);
             }
-
+        
             createThumbnailElement(canvas, pageNumber) {
                 const container = document.createElement('div');
                 container.className = 'thumbnail';
@@ -938,16 +932,16 @@
                         this.showPage(pageNumber);
                     }
                 });
-
+        
                 return container;
             }
-
+        
             showEditSection() {
                 this.uploadCard.style.display = 'none';
                 this.editCard.style.display = 'block';
                 this.statusBar.style.display = 'flex';
             }
-
+        
             backToUpload() {
                 this.editCard.style.display = 'none';
                 this.uploadCard.style.display = 'block';
@@ -955,7 +949,7 @@
                 
                 this.showMessage('Silakan upload PDF baru atau lanjutkan editing.', 'success');
             }
-
+        
             deleteThumbnail(pageNumber) {
                 if (this.thumbnails.length > 1) {
                     this.thumbnails.splice(pageNumber, 1);
@@ -977,12 +971,12 @@
                     this.showError('Tidak bisa menghapus halaman terakhir');
                 }
             }
-
+        
             initializeSortable() {
                 if (this.sortable) {
                     this.sortable.destroy();
                 }
-
+        
                 this.sortable = Sortable.create(this.thumbnailContainer, {
                     animation: 150,
                     ghostClass: 'sortable-ghost',
@@ -1009,7 +1003,7 @@
                     }
                 });
             }
-
+        
             async showPage(pageNumber) {
                 if (pageNumber < 0 || pageNumber >= this.thumbnails.length) return;
                 
@@ -1019,7 +1013,7 @@
                 this.thumbnails.forEach((thumb, index) => {
                     thumb.element.classList.toggle('active', index === pageNumber);
                 });
-
+        
                 const thumbnail = this.thumbnails[pageNumber];
                 const pdfDoc = this.pdfDocs.get(thumbnail.pdfId);
                 const page = await pdfDoc.getPage(thumbnail.pageIndex + 1);
@@ -1051,15 +1045,15 @@
                 
                 this.enablePreviewControls(true);
             }
-
+        
             rotateThumbnail(pageNumber, degrees) {
                 this.rotatePage(pageNumber, degrees);
             }
-
+        
             rotateCurrentPage(degrees) {
                 this.rotatePage(this.currentPage, degrees);
             }
-
+        
             async rotatePage(pageNumber, degrees) {
                 const thumbnail = this.thumbnails[pageNumber];
                 const currentRotation = thumbnail.rotation || 0;
@@ -1107,21 +1101,21 @@
                     this.showPage(pageNumber);
                 }
             }
-
+        
             movePageUp() {
                 if (this.currentPage > 0) {
                     this.swapPages(this.currentPage, this.currentPage - 1);
                     this.showPage(this.currentPage - 1);
                 }
             }
-
+        
             movePageDown() {
                 if (this.currentPage < this.thumbnails.length - 1) {
                     this.swapPages(this.currentPage, this.currentPage + 1);
                     this.showPage(this.currentPage + 1);
                 }
             }
-
+        
             swapPages(index1, index2) {
                 [this.thumbnails[index1], this.thumbnails[index2]] = 
                 [this.thumbnails[index2], this.thumbnails[index1]];
@@ -1133,7 +1127,7 @@
                 
                 this.updateThumbnailsDisplay();
             }
-
+        
             updateThumbnailsDisplay() {
                 this.thumbnailContainer.innerHTML = '';
                 this.thumbnails.forEach((thumb, index) => {
@@ -1153,12 +1147,12 @@
                 
                 this.initializeSortable();
             }
-
+        
             updatePageCount() {
                 this.pageCount.textContent = `${this.thumbnails.length} halaman`;
                 this.savePdf.disabled = this.thumbnails.length === 0;
             }
-
+        
             async saveRearrangedPdf() {
                 if (this.isProcessing || this.thumbnails.length === 0) return;
                 
@@ -1169,10 +1163,6 @@
                     const { PDFDocument, degrees } = PDFLib;
                     const newPdfDoc = await PDFDocument.create();
                     
-                    // Optimasi metadata
-                    newPdfDoc.setTitle('PDF Rearranged - F4');
-                    newPdfDoc.setAuthor('PDF Rearranger App');
-                    
                     for (let i = 0; i < this.thumbnails.length; i++) {
                         const thumb = this.thumbnails[i];
                         const originalFile = this.originalFiles.get(thumb.pdfId);
@@ -1181,57 +1171,18 @@
                         
                         const [copiedPage] = await newPdfDoc.copyPages(originalPdfDoc, [thumb.pageIndex]);
                         
-                        // Apply rotation
+                        // Apply rotation saja, pertahankan ukuran original
                         if (thumb.rotation) {
                             const rotationAngle = this.getPdfLibRotation(thumb.rotation);
                             copiedPage.setRotation(rotationAngle);
                         }
                         
-                        // Determine page orientation after rotation
-                        const originalWidth = copiedPage.getWidth();
-                        const originalHeight = copiedPage.getHeight();
-                        const rotation = thumb.rotation || 0;
-                        
-                        // Calculate effective dimensions after rotation
-                        let effectiveWidth, effectiveHeight;
-                        if (rotation === 90 || rotation === 270) {
-                            effectiveWidth = originalHeight;
-                            effectiveHeight = originalWidth;
-                        } else {
-                            effectiveWidth = originalWidth;
-                            effectiveHeight = originalHeight;
-                        }
-                        
-                        // Choose F4 size based on orientation
-                        const isLandscape = effectiveWidth > effectiveHeight;
-                        const f4Width = isLandscape ? this.F4_LANDSCAPE_WIDTH : this.F4_PORTRAIT_WIDTH;
-                        const f4Height = isLandscape ? this.F4_LANDSCAPE_HEIGHT : this.F4_PORTRAIT_HEIGHT;
-                        
-                        // Create new F4 page with correct orientation
-                        const f4Page = newPdfDoc.addPage([f4Width, f4Height]);
-                        
-                        // Calculate scale to fit original page into F4 while maintaining aspect ratio
-                        const scaleX = f4Width / effectiveWidth;
-                        const scaleY = f4Height / effectiveHeight;
-                        const scale = Math.min(scaleX, scaleY);
-                        
-                        // Calculate position to center the page
-                        const x = (f4Width - (effectiveWidth * scale)) / 2;
-                        const y = (f4Height - (effectiveHeight * scale)) / 2;
-                        
-                        // Embed the original page into F4 page
-                        const embeddedPage = await newPdfDoc.embedPage(copiedPage);
-                        f4Page.drawPage(embeddedPage, {
-                            x: x,
-                            y: y,
-                            xScale: scale,
-                            yScale: scale,
-                        });
+                        newPdfDoc.addPage(copiedPage);
                     }
                     
                     const pdfBytes = await newPdfDoc.save();
                     this.downloadPdf(pdfBytes);
-                    this.showMessage(`PDF berhasil disimpan dalam ukuran F4! Ukuran file: ${this.formatFileSize(pdfBytes.byteLength)}`, 'success');
+                    this.showMessage('PDF berhasil disimpan dengan ukuran original!', 'success');
                     
                 } catch (error) {
                     console.error('Error saving PDF:', error);
@@ -1242,16 +1193,6 @@
                 }
             }
         
-            // Tambahkan method helper untuk format file size
-            formatFileSize(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-            }
-        
-            // getPdfLibRotation method tetap sama
             getPdfLibRotation(rotation) {
                 const { degrees } = PDFLib;
                 switch (rotation) {
@@ -1262,41 +1203,39 @@
                 }
             }
         
-            // downloadPdf method tetap sama
             downloadPdf(pdfBytes) {
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'pdf-rearranged-f4.pdf';
+                a.download = 'pdf-rearranged.pdf';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }
-
-
+        
             enableControls(enabled) {
                 this.moveUp.disabled = !enabled;
                 this.moveDown.disabled = !enabled;
                 this.savePdf.disabled = !enabled || this.thumbnails.length === 0;
             }
-
+        
             enablePreviewControls(enabled) {
                 this.previewRotateLeft.disabled = !enabled;
                 this.previewRotateRight.disabled = !enabled;
             }
-
+        
             showLoading(show) {
                 this.loading.style.display = show ? 'block' : 'none';
             }
-
+        
             showError(message) {
                 this.errorMessage.textContent = message;
                 this.errorMessage.style.display = 'block';
                 this.successMessage.style.display = 'none';
             }
-
+        
             showMessage(message, type = 'success') {
                 if (type === 'success') {
                     this.successMessage.textContent = message;
@@ -1306,13 +1245,13 @@
                     this.showError(message);
                 }
             }
-
+        
             hideMessages() {
                 this.errorMessage.style.display = 'none';
                 this.successMessage.style.display = 'none';
             }
         }
-
+        
         // Initialize application
         let app;
         document.addEventListener('DOMContentLoaded', () => {
