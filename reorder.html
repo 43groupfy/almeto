@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Rearranger Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: var(--dark);
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
+        .upload-section {
+            text-align: center;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 40px 20px;
+            transition: var(--transition);
+            cursor: pointer;
+            background: var(--light);
+        }
+
+        .upload-section:hover, .upload-section.drag-over {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .upload-hint {
+            color: var(--gray);
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-success:hover {
+            background: #3ab0d6;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #e01a6f;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+        }
+
+        .btn-warning:hover {
+            background: #e0861b;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #6508a5;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .controls button,
+        .controls .btn {
+            flex: 1 1 0;
+            display: flex;
+            justify-content: center;  /* rata tengah horizontal */
+            align-items: center;       /* rata tengah vertikal */
+            text-align: center;        /* jaga-jaga kalau text-nya dua baris */
+        }
+
+
+
+        .preview-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+
+        @media (min-width: 992px) {
+            .preview-section {
+                flex-direction: row;
+            }
+        }
+
+        .thumbnail-container {
+            flex: 1;
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 15px;
+            background: var(--light);
+        }
+
+        .page-preview {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            background: white;
+            min-height: 500px;
+        }
+
+        .thumbnail-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .thumbnail {
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px;
+            background: white;
+            cursor: move;
+            transition: var(--transition);
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .thumbnail:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .thumbnail.active {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        .thumbnail canvas {
+            width: 80px;
+            height: 100px;
+            object-fit: contain;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: white;
+        }
+
+        .thumbnail-info {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .thumbnail-controls {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .thumbnail:hover .thumbnail-controls {
+            opacity: 1;
+        }
+
+        .thumb-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--dark);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .thumb-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .thumb-btn-delete {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .thumb-btn-delete:hover {
+            background: #e01a6f;
+            border-color: #e01a6f;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-info {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .preview-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        #previewCanvas {
+            max-width: 100%;
+            max-height: 400px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: var(--gray);
+            padding: 40px 20px;
+        }
+
+        .preview-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--border);
+        }
+
+        .preview-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;  /* rata tengah horizontal */
+            align-items: center;       /* rata tengah vertikal */
+            text-align: center;        /* jaga-jaga kalau text-nya dua baris */
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(67, 97, 238, 0.2);
+            border-left: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: var(--danger);
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid var(--danger);
+            border-radius: var(--radius);
+            background: rgba(247, 37, 133, 0.1);
+            display: none;
+        }
+
+        .success-message {
+            color: #2a9d8f;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #2a9d8f;
+            border-radius: var(--radius);
+            background: rgba(42, 157, 143, 0.1);
+            display: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .page-count {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px 0;
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .btn {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
+            
+            .thumbnail-list {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .preview-controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .thumbnail-list {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+            
+            .thumbnail-info {
+                font-size: 0.75rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .thumbnail canvas {
+                width: 60px;
+                height: 80px;
+            }
+        }
+        @media (max-width: 600px) {
+            .action-buttons button {
+                flex: 0 0 100%;    /* FULL WIDTH */
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-file-pdf"></i>
+                <h1>PDF Rearranger Pro</h1>
+            </div>
+            <p class="subtitle">Atur ulang, gabungkan, dan edit halaman PDF dengan mudah. Drag & drop untuk mengubah urutan halaman.</p>
+        </header>
+
+        <!-- Upload PDF Utama -->
+        <div class="card" id="uploadCard">
+            <h2 class="card-title"><i class="fas fa-cloud-upload-alt"></i> Upload PDF</h2>
+            <div class="upload-section" id="dropZone">
+                <div class="upload-icon">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <p class="upload-text">Seret file PDF ke sini atau klik untuk memilih</p>
+                <p class="upload-hint">Mendukung semua file PDF hingga 50MB</p>
+                <button class="btn" id="uploadBtn">
+                    <i class="fas fa-folder-open"></i> Pilih File PDF
+                </button>
+                <input type="file" id="pdfInput" accept=".pdf" class="file-input">
+            </div>
+        </div>
+
+        <!-- Edit & Tambah PDF -->
+        <div class="card" id="editCard" style="display: none;">
+            <h2 class="card-title"><i class="fas fa-edit"></i> Edit & Atur Ulang PDF</h2>
+
+            <div class="preview-section">
+                <div class="card thumbnail-container">
+                    <h2 class="card-title"><i class="fas fa-th"></i> Daftar Halaman</h2>
+                    <div class="controls">
+                        <button class="btn" id="moveUp" disabled>
+                            <i class="fas fa-arrow-up"></i> Pindah ke Atas
+                        </button>
+                        <button class="btn" id="moveDown" disabled>
+                            <i class="fas fa-arrow-down"></i> Pindah ke Bawah
+                        </button>
+                    </div>
+                    <div class="thumbnail-list" id="thumbnailContainer">
+                        <!-- Thumbnail akan ditampilkan di sini -->
+                    </div>
+                </div>
+                
+                <div class="card page-preview">
+                    <div class="preview-header">
+                        <h2 class="card-title"><i class="fas fa-search"></i> Preview</h2>
+                        <div class="page-info" id="pageInfo">Pilih halaman untuk preview</div>
+                    </div>
+                    <div class="preview-content">
+                        <div class="preview-placeholder" id="previewPlaceholder">
+                            <i class="far fa-file-pdf"></i>
+                            <p>Pilih halaman dari daftar untuk melihat preview</p>
+                        </div>
+                        <canvas id="previewCanvas" style="display: none;"></canvas>
+                    </div>
+                    <div class="preview-controls">
+                        <button class="btn btn-warning" id="previewRotateLeft" disabled>
+                            <i class="fas fa-undo"></i> Rotate Kiri
+                        </button>
+                        <button class="btn btn-warning" id="previewRotateRight" disabled>
+                            <i class="fas fa-redo"></i> Rotate Kanan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Memproses PDF... Harap tunggu</p>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+
+        <div class="status-bar" id="statusBar" style="display: none;">
+            <div class="page-count" id="pageCount">0 halaman</div>
+            <div class="action-buttons">
+                <button class="btn btn-outline" id="backToUploadBtn">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Upload
+                </button>
+                <button class="btn btn-secondary" id="addMorePdfBtn">
+                    <i class="fas fa-plus"></i> Tambah PDF Lain
+                </button>
+                <button class="btn btn-success" id="savePdf" disabled>
+                    <i class="fas fa-download"></i> Unduh PDF
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            <p>PDF Rearranger Pro &copy; 2023 - Alat untuk mengatur ulang halaman PDF dengan mudah</p>
+        </footer>
+    </div>
+
+    <script>
+        class PDFRearrangerApp {
+            constructor() {
+                this.pdfDocs = new Map();
+                this.thumbnails = [];
+                this.currentPage = 0;
+                this.pageRotations = {};
+                this.originalFiles = new Map();
+                this.isProcessing = false;
+                
+                // Standard thumbnail dimensions
+                this.thumbnailWidth = 80;
+                this.thumbnailHeight = 100;
+                
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.showMessage('Silakan upload PDF untuk memulai.', 'success');
+            }
+
+            initializeElements() {
+                // Card elements
+                this.uploadCard = document.getElementById('uploadCard');
+                this.editCard = document.getElementById('editCard');
+                
+                // Upload elements
+                this.pdfInput = document.getElementById('pdfInput');
+                this.uploadBtn = document.getElementById('uploadBtn');
+                this.dropZone = document.getElementById('dropZone');
+                
+                // Insert elements
+                this.insertPdfInput = document.getElementById('insertPdfInput');
+                this.addMorePdfBtn = document.getElementById('addMorePdfBtn');
+                
+                // Control elements
+                this.moveUp = document.getElementById('moveUp');
+                this.moveDown = document.getElementById('moveDown');
+                
+                // Preview elements
+                this.thumbnailContainer = document.getElementById('thumbnailContainer');
+                this.previewCanvas = document.getElementById('previewCanvas');
+                this.pageInfo = document.getElementById('pageInfo');
+                this.previewRotateLeft = document.getElementById('previewRotateLeft');
+                this.previewRotateRight = document.getElementById('previewRotateRight');
+                this.previewPlaceholder = document.getElementById('previewPlaceholder');
+                
+                // Status elements
+                this.pageCount = document.getElementById('pageCount');
+                this.savePdf = document.getElementById('savePdf');
+                this.backToUploadBtn = document.getElementById('backToUploadBtn');
+                this.statusBar = document.getElementById('statusBar');
+                
+                // Utility elements
+                this.loading = document.getElementById('loading');
+                this.errorMessage = document.getElementById('errorMessage');
+                this.successMessage = document.getElementById('successMessage');
+            }
+
+            bindEvents() {
+                // Upload events
+                this.uploadBtn.addEventListener('click', () => this.pdfInput.click());
+                this.pdfInput.addEventListener('change', (e) => this.handleFileUpload(e.target.files[0], true));
+                
+                // Drag and drop for main PDF
+                this.setupDragAndDrop(this.dropZone, (file) => this.handleFileUpload(file, true));
+                
+                // Add more PDF events
+                this.addMorePdfBtn.addEventListener('click', () => this.showInsertPdfDialog());
+                
+                // Control events
+                this.moveUp.addEventListener('click', () => this.movePageUp());
+                this.moveDown.addEventListener('click', () => this.movePageDown());
+                this.previewRotateLeft.addEventListener('click', () => this.rotateCurrentPage(-90));
+                this.previewRotateRight.addEventListener('click', () => this.rotateCurrentPage(90));
+                
+                // Action events
+                this.savePdf.addEventListener('click', () => this.saveRearrangedPdf());
+                this.backToUploadBtn.addEventListener('click', () => this.backToUpload());
+            }
+
+            setupDragAndDrop(dropZone, callback) {
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('drag-over');
+                });
+
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('drag-over');
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('drag-over');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const pdfFile = Array.from(files).find(file => file.type === 'application/pdf');
+                        if (pdfFile) {
+                            callback(pdfFile);
+                        } else {
+                            this.showError('Harap unggah file PDF yang valid');
+                        }
+                    }
+                });
+            }
+
+            showInsertPdfDialog() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.pdf';
+                input.multiple = true;
+                input.style.display = 'none';
+                
+                input.addEventListener('change', (e) => {
+                    this.handleInsertPdf(Array.from(e.target.files));
+                    document.body.removeChild(input);
+                });
+                
+                document.body.appendChild(input);
+                input.click();
+            }
+
+            async handleFileUpload(file, isMainPdf = false) {
+                if (!file || file.type !== 'application/pdf') {
+                    this.showError('Harap pilih file PDF yang valid');
+                    return;
+                }
+
+                await this.loadPdf(file, isMainPdf);
+            }
+
+            async handleInsertPdf(files) {
+                if (!this.thumbnails.length) {
+                    this.showError('Upload PDF utama terlebih dahulu!');
+                    return;
+                }
+
+                for (let file of files) {
+                    if (file.type === 'application/pdf') {
+                        await this.loadPdf(file, false);
+                    }
+                }
+            }
+
+            async loadPdf(file, isMainPdf = false) {
+                if (this.isProcessing) return;
+                
+                this.isProcessing = true;
+                this.showLoading(true);
+                this.hideMessages();
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    
+                    // Simpan PDF document dan file original
+                    const pdfId = `pdf_${Date.now()}`;
+                    this.pdfDocs.set(pdfId, pdfDoc);
+                    this.originalFiles.set(pdfId, file);
+
+                    if (isMainPdf) {
+                        // Reset untuk PDF utama
+                        this.thumbnails = [];
+                        this.pageRotations = {};
+                        this.currentPage = 0;
+                        this.thumbnailContainer.innerHTML = '';
+                        
+                        // Show edit section
+                        this.showEditSection();
+                    }
+
+                    // Generate thumbnails untuk setiap halaman
+                    for (let i = 0; i < pdfDoc.numPages; i++) {
+                        await this.createThumbnail(pdfId, i);
+                    }
+
+                    this.updatePageCount();
+                    this.initializeSortable();
+
+                    if (this.thumbnails.length > 0) {
+                        this.showPage(isMainPdf ? 0 : this.thumbnails.length - 1);
+                    }
+
+                    const action = isMainPdf ? 'diunggah' : 'ditambahkan';
+                    this.showMessage(`PDF berhasil ${action}! ${pdfDoc.numPages} halaman ditambahkan.`, 'success');
+                    this.enableControls(true);
+
+                } catch (error) {
+                    console.error('Error loading PDF:', error);
+                    this.showError('Error memuat file PDF: ' + error.message);
+                } finally {
+                    this.isProcessing = false;
+                    this.showLoading(false);
+                }
+            }
+
+            async createThumbnail(pdfId, pageIndex) {
+                const pdfDoc = this.pdfDocs.get(pdfId);
+                const page = await pdfDoc.getPage(pageIndex + 1);
+                
+                // Calculate scale to fit thumbnail dimensions while maintaining aspect ratio
+                const viewport = page.getViewport({ scale: 1.0 });
+                const aspectRatio = viewport.width / viewport.height;
+                
+                let scale;
+                if (aspectRatio > (this.thumbnailWidth / this.thumbnailHeight)) {
+                    // Width is the limiting factor
+                    scale = this.thumbnailWidth / viewport.width;
+                } else {
+                    // Height is the limiting factor
+                    scale = this.thumbnailHeight / viewport.height;
+                }
+                
+                const thumbnailViewport = page.getViewport({ scale: scale });
+                
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                // Set fixed dimensions for all thumbnails
+                canvas.width = this.thumbnailWidth;
+                canvas.height = this.thumbnailHeight;
+                
+                // Clear canvas with white background
+                context.fillStyle = 'white';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Calculate position to center the thumbnail
+                const x = (canvas.width - thumbnailViewport.width) / 2;
+                const y = (canvas.height - thumbnailViewport.height) / 2;
+                
+                await page.render({
+                    canvasContext: context,
+                    viewport: thumbnailViewport,
+                    transform: [1, 0, 0, 1, x, y]
+                }).promise;
+
+                const thumbnailIndex = this.thumbnails.length;
+                const thumbnail = {
+                    id: `thumb_${pdfId}_${pageIndex}`,
+                    pdfId: pdfId,
+                    pageIndex: pageIndex,
+                    canvas: canvas,
+                    rotation: 0,
+                    element: this.createThumbnailElement(canvas, thumbnailIndex)
+                };
+
+                this.thumbnails.push(thumbnail);
+                this.thumbnailContainer.appendChild(thumbnail.element);
+            }
+
+            createThumbnailElement(canvas, pageNumber) {
+                const container = document.createElement('div');
+                container.className = 'thumbnail';
+                container.dataset.index = pageNumber;
+                
+                const thumbnailInfo = document.createElement('div');
+                thumbnailInfo.className = 'thumbnail-info';
+                thumbnailInfo.textContent = `Halaman ${pageNumber + 1}`;
+                
+                const controls = document.createElement('div');
+                controls.className = 'thumbnail-controls';
+                controls.innerHTML = `
+                    <button class="thumb-btn" onclick="app.rotateThumbnail(${pageNumber}, -90)">↶</button>
+                    <button class="thumb-btn" onclick="app.rotateThumbnail(${pageNumber}, 90)">↷</button>
+                    <button class="thumb-btn thumb-btn-delete" onclick="app.deleteThumbnail(${pageNumber})">×</button>
+                `;
+                
+                container.appendChild(canvas);
+                container.appendChild(thumbnailInfo);
+                container.appendChild(controls);
+                
+                container.addEventListener('click', (e) => {
+                    if (!e.target.closest('.thumb-btn')) {
+                        this.showPage(pageNumber);
+                    }
+                });
+
+                return container;
+            }
+
+            showEditSection() {
+                this.uploadCard.style.display = 'none';
+                this.editCard.style.display = 'block';
+                this.statusBar.style.display = 'flex';
+            }
+
+            backToUpload() {
+                this.editCard.style.display = 'none';
+                this.uploadCard.style.display = 'block';
+                this.statusBar.style.display = 'none';
+                
+                this.showMessage('Silakan upload PDF baru atau lanjutkan editing.', 'success');
+            }
+
+            deleteThumbnail(pageNumber) {
+                if (this.thumbnails.length > 1) {
+                    this.thumbnails.splice(pageNumber, 1);
+                    delete this.pageRotations[pageNumber];
+                    
+                    const newPage = Math.min(this.currentPage, this.thumbnails.length - 1);
+                    this.updateThumbnailsDisplay();
+                    
+                    if (this.thumbnails.length > 0) {
+                        this.showPage(newPage);
+                    } else {
+                        this.previewCanvas.style.display = 'none';
+                        this.previewPlaceholder.style.display = 'block';
+                        this.pageInfo.textContent = 'Pilih halaman untuk preview';
+                    }
+                    
+                    this.updatePageCount();
+                } else {
+                    this.showError('Tidak bisa menghapus halaman terakhir');
+                }
+            }
+
+            initializeSortable() {
+                if (this.sortable) {
+                    this.sortable.destroy();
+                }
+
+                this.sortable = Sortable.create(this.thumbnailContainer, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: (evt) => {
+                        const oldIndex = evt.oldIndex;
+                        const newIndex = evt.newIndex;
+                        
+                        if (oldIndex !== newIndex) {
+                            const [movedItem] = this.thumbnails.splice(oldIndex, 1);
+                            this.thumbnails.splice(newIndex, 0, movedItem);
+                            
+                            // Update current page
+                            if (this.currentPage === oldIndex) {
+                                this.currentPage = newIndex;
+                            } else if (this.currentPage > oldIndex && this.currentPage <= newIndex) {
+                                this.currentPage--;
+                            } else if (this.currentPage < oldIndex && this.currentPage >= newIndex) {
+                                this.currentPage++;
+                            }
+                            
+                            this.updateThumbnailsDisplay();
+                            this.showPage(this.currentPage);
+                        }
+                    }
+                });
+            }
+
+            async showPage(pageNumber) {
+                if (pageNumber < 0 || pageNumber >= this.thumbnails.length) return;
+                
+                this.currentPage = pageNumber;
+                
+                // Update active thumbnail
+                this.thumbnails.forEach((thumb, index) => {
+                    thumb.element.classList.toggle('active', index === pageNumber);
+                });
+
+                const thumbnail = this.thumbnails[pageNumber];
+                const pdfDoc = this.pdfDocs.get(thumbnail.pdfId);
+                const page = await pdfDoc.getPage(thumbnail.pageIndex + 1);
+                
+                // Apply rotation
+                const rotation = thumbnail.rotation || 0;
+                const viewport = page.getViewport({ 
+                    scale: 1.0,
+                    rotation: rotation
+                });
+                
+                const context = this.previewCanvas.getContext('2d');
+                this.previewCanvas.width = viewport.width;
+                this.previewCanvas.height = viewport.height;
+                
+                // Clear canvas
+                context.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+                
+                this.pageInfo.textContent = `Halaman ${pageNumber + 1} (Rotasi: ${rotation}°)`;
+                
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+                
+                // Show canvas and hide placeholder
+                this.previewCanvas.style.display = 'block';
+                this.previewPlaceholder.style.display = 'none';
+                
+                this.enablePreviewControls(true);
+            }
+
+            rotateThumbnail(pageNumber, degrees) {
+                this.rotatePage(pageNumber, degrees);
+            }
+
+            rotateCurrentPage(degrees) {
+                this.rotatePage(this.currentPage, degrees);
+            }
+
+            async rotatePage(pageNumber, degrees) {
+                const thumbnail = this.thumbnails[pageNumber];
+                const currentRotation = thumbnail.rotation || 0;
+                const newRotation = (currentRotation + degrees + 360) % 360;
+                
+                thumbnail.rotation = newRotation;
+                this.pageRotations[pageNumber] = newRotation;
+                
+                // Update thumbnail preview dengan rotasi
+                const pdfDoc = this.pdfDocs.get(thumbnail.pdfId);
+                const page = await pdfDoc.getPage(thumbnail.pageIndex + 1);
+                
+                // Calculate scale untuk thumbnail dengan rotasi
+                const viewport = page.getViewport({ scale: 1.0, rotation: newRotation });
+                const aspectRatio = viewport.width / viewport.height;
+                
+                let scale;
+                if (aspectRatio > (this.thumbnailWidth / this.thumbnailHeight)) {
+                    scale = this.thumbnailWidth / viewport.width;
+                } else {
+                    scale = this.thumbnailHeight / viewport.height;
+                }
+                
+                const thumbnailViewport = page.getViewport({ scale: scale, rotation: newRotation });
+                
+                const canvas = thumbnail.element.querySelector('canvas');
+                const context = canvas.getContext('2d');
+                
+                // Clear canvas
+                context.fillStyle = 'white';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Calculate position to center the thumbnail
+                const x = (canvas.width - thumbnailViewport.width) / 2;
+                const y = (canvas.height - thumbnailViewport.height) / 2;
+                
+                await page.render({
+                    canvasContext: context,
+                    viewport: thumbnailViewport,
+                    transform: [1, 0, 0, 1, x, y]
+                }).promise;
+                
+                // Update main preview jika halaman ini sedang dilihat
+                if (pageNumber === this.currentPage) {
+                    this.showPage(pageNumber);
+                }
+            }
+
+            movePageUp() {
+                if (this.currentPage > 0) {
+                    this.swapPages(this.currentPage, this.currentPage - 1);
+                    this.showPage(this.currentPage - 1);
+                }
+            }
+
+            movePageDown() {
+                if (this.currentPage < this.thumbnails.length - 1) {
+                    this.swapPages(this.currentPage, this.currentPage + 1);
+                    this.showPage(this.currentPage + 1);
+                }
+            }
+
+            swapPages(index1, index2) {
+                [this.thumbnails[index1], this.thumbnails[index2]] = 
+                [this.thumbnails[index2], this.thumbnails[index1]];
+                
+                // Update rotations
+                const tempRotation = this.thumbnails[index1].rotation;
+                this.thumbnails[index1].rotation = this.thumbnails[index2].rotation;
+                this.thumbnails[index2].rotation = tempRotation;
+                
+                this.updateThumbnailsDisplay();
+            }
+
+            updateThumbnailsDisplay() {
+                this.thumbnailContainer.innerHTML = '';
+                this.thumbnails.forEach((thumb, index) => {
+                    thumb.element.dataset.index = index;
+                    thumb.element.querySelector('.thumbnail-info').textContent = `Halaman ${index + 1}`;
+                    
+                    // Update event listeners untuk tombol
+                    const controls = thumb.element.querySelector('.thumbnail-controls');
+                    controls.innerHTML = `
+                        <button class="thumb-btn" onclick="app.rotateThumbnail(${index}, -90)">↶</button>
+                        <button class="thumb-btn" onclick="app.rotateThumbnail(${index}, 90)">↷</button>
+                        <button class="thumb-btn thumb-btn-delete" onclick="app.deleteThumbnail(${index})">×</button>
+                    `;
+                    
+                    this.thumbnailContainer.appendChild(thumb.element);
+                });
+                
+                this.initializeSortable();
+            }
+
+            updatePageCount() {
+                this.pageCount.textContent = `${this.thumbnails.length} halaman`;
+                this.savePdf.disabled = this.thumbnails.length === 0;
+            }
+
+            async saveRearrangedPdf() {
+                if (this.isProcessing || this.thumbnails.length === 0) return;
+                
+                this.isProcessing = true;
+                this.showLoading(true);
+
+                try {
+                    const { PDFDocument, degrees } = PDFLib;
+                    const newPdfDoc = await PDFDocument.create();
+                    
+                    for (let i = 0; i < this.thumbnails.length; i++) {
+                        const thumb = this.thumbnails[i];
+                        const originalFile = this.originalFiles.get(thumb.pdfId);
+                        const arrayBuffer = await originalFile.arrayBuffer();
+                        const originalPdfDoc = await PDFDocument.load(arrayBuffer);
+                        
+                        const [copiedPage] = await newPdfDoc.copyPages(originalPdfDoc, [thumb.pageIndex]);
+                        
+                        // Apply rotation
+                        if (thumb.rotation) {
+                            const rotationAngle = this.getPdfLibRotation(thumb.rotation);
+                            copiedPage.setRotation(rotationAngle);
+                        }
+                        
+                        newPdfDoc.addPage(copiedPage);
+                    }
+                    
+                    const pdfBytes = await newPdfDoc.save();
+                    this.downloadPdf(pdfBytes);
+                    this.showMessage('PDF berhasil disimpan!', 'success');
+                    
+                } catch (error) {
+                    console.error('Error saving PDF:', error);
+                    this.showError('Error menyimpan PDF: ' + error.message);
+                } finally {
+                    this.isProcessing = false;
+                    this.showLoading(false);
+                }
+            }
+
+            getPdfLibRotation(rotation) {
+                const { degrees } = PDFLib;
+                switch (rotation) {
+                    case 90: return degrees(90);
+                    case 180: return degrees(180);
+                    case 270: return degrees(270);
+                    default: return degrees(0);
+                }
+            }
+
+            downloadPdf(pdfBytes) {
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'pdf-rearranged.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            enableControls(enabled) {
+                this.moveUp.disabled = !enabled;
+                this.moveDown.disabled = !enabled;
+                this.savePdf.disabled = !enabled || this.thumbnails.length === 0;
+            }
+
+            enablePreviewControls(enabled) {
+                this.previewRotateLeft.disabled = !enabled;
+                this.previewRotateRight.disabled = !enabled;
+            }
+
+            showLoading(show) {
+                this.loading.style.display = show ? 'block' : 'none';
+            }
+
+            showError(message) {
+                this.errorMessage.textContent = message;
+                this.errorMessage.style.display = 'block';
+                this.successMessage.style.display = 'none';
+            }
+
+            showMessage(message, type = 'success') {
+                if (type === 'success') {
+                    this.successMessage.textContent = message;
+                    this.successMessage.style.display = 'block';
+                    this.errorMessage.style.display = 'none';
+                } else {
+                    this.showError(message);
+                }
+            }
+
+            hideMessages() {
+                this.errorMessage.style.display = 'none';
+                this.successMessage.style.display = 'none';
+            }
+        }
+
+        // Initialize application
+        let app;
+        document.addEventListener('DOMContentLoaded', () => {
+            app = new PDFRearrangerApp();
+        });
+    </script>
+</body>
+</html>
