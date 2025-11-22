@@ -1,1 +1,117 @@
-tr
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Tools Home</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        header {
+            background: #007bff;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .tool-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid #e3e3e3;
+        }
+
+        .tool-card:hover {
+            background: #e9f3ff;
+            transform: translateY(-3px);
+        }
+
+        .tool-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 8px;
+        }
+
+        .tool-desc {
+            font-size: 14px;
+            color: #555;
+        }
+
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>PDF Tools</header>
+
+<div class="container">
+
+    <div class="tools-grid">
+
+        <a href="converter.html">
+            <div class="tool-card">
+                <div class="tool-title">PDF Converter</div>
+                <div class="tool-desc">Ubah gambar menjadi PDF dengan cepat.</div>
+            </div>
+        </a>
+
+        <a href="watermark.html">
+            <div class="tool-card">
+                <div class="tool-title">Watermark PDF</div>
+                <div class="tool-desc">Tambahkan watermark ke file PDF.</div>
+            </div>
+        </a>
+
+        <a href="split.html">
+            <div class="tool-card">
+                <div class="tool-title">Split PDF</div>
+                <div class="tool-desc">Pisahkan PDF menjadi beberapa bagian.</div>
+            </div>
+        </a>
+
+        <a href="merge.html">
+            <div class="tool-card">
+                <div class="tool-title">Merge PDF</div>
+                <div class="tool-desc">Gabungkan banyak file PDF.</div>
+            </div>
+        </a>
+
+        <a href="organize.html">
+            <div class="tool-card">
+                <div class="tool-title">Organize PDF</div>
+                <div class="tool-desc">Atur ulang halaman PDF.</div>
+            </div>
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>
