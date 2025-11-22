@@ -1,107 +1,290 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Rearranger</title>
+    <title>PDF PageMaster | Alat Pengatur Halaman PDF Profesional</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #5E35B1;
+            --primary-light: #7E57C2;
+            --primary-dark: #4527A0;
+            --secondary: #00ACC1;
+            --secondary-light: #26C6DA;
+            --secondary-dark: #0097A7;
+            --success: #43A047;
+            --warning: #FFB300;
+            --error: #E53935;
+            --surface: #FFFFFF;
+            --background: #F5F7FA;
+            --surface-dark: #263238;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --text-light: #FFFFFF;
+            --border: #E0E0E0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1), 0 5px 10px rgba(0,0,0,0.05);
+            --shadow-xl: 0 20px 40px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.05);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
         body {
-            background-color: #f5f5f5;
-            color: #333;
-            line-height: 1.5;
-            padding: 20px;
+            background: linear-gradient(135deg, var(--background) 0%, #EDF2F7 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+            padding: 24px;
         }
 
         header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 40px;
+            padding: 40px 0 20px;
+            position: relative;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .logo {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+            color: var(--text-light);
         }
 
         h1 {
-            font-size: 1.5rem;
-            margin-bottom: 5px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
         }
 
         .subtitle {
-            color: #666;
-            margin-bottom: 20px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 400;
+            line-height: 1.7;
         }
 
         .card {
-            background: white;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 32px;
+            margin-bottom: 32px;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
         }
 
-        .upload-section {
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-icon i {
+            font-size: 1.4rem;
+            color: var(--text-light);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        .upload-area {
             text-align: center;
-            border: 2px dashed #ccc;
-            border-radius: 5px;
-            padding: 30px 15px;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 60px 30px;
+            transition: var(--transition);
             cursor: pointer;
-            background: #f9f9f9;
+            background: rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
         }
 
-        .upload-section:hover {
-            border-color: #4361ee;
-            background: #f0f4ff;
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            transform: scaleX(0);
+            transition: var(--transition);
+        }
+
+        .upload-area:hover, .upload-area.drag-over {
+            border-color: var(--primary);
+            background: rgba(94, 53, 177, 0.03);
+        }
+
+        .upload-area:hover::before, .upload-area.drag-over::before {
+            transform: scaleX(1);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            opacity: 0.8;
         }
 
         .upload-text {
-            margin-bottom: 10px;
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            font-weight: 500;
         }
 
         .upload-hint {
-            color: #666;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-size: 1rem;
         }
 
         .btn {
-            display: inline-block;
-            padding: 8px 16px;
-            background: #4361ee;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
+            transition: var(--transition);
             text-decoration: none;
-            font-size: 0.9rem;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: all 0.6s;
         }
 
         .btn:hover {
-            background: #3a56d4;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn:hover::before {
+            left: 100%;
         }
 
         .btn:disabled {
-            background: #aaa;
+            background: var(--text-secondary);
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn:disabled:hover::before {
+            display: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-light) 100%);
         }
 
         .btn-success {
-            background: #4cc9f0;
+            background: linear-gradient(135deg, var(--success) 0%, #4CAF50 100%);
         }
 
-        .btn-success:hover {
-            background: #3ab0d6;
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning) 0%, #FFC107 100%);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
         }
 
         .file-input {
@@ -110,123 +293,177 @@
 
         .controls {
             display: flex;
-            gap: 10px;
-            margin: 15px 0;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
         }
 
-        .preview-section {
+        .controls button {
+            flex: 1;
+            min-width: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .workspace {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 24px;
         }
 
-        @media (min-width: 768px) {
-            .preview-section {
+        @media (min-width: 1200px) {
+            .workspace {
                 flex-direction: row;
             }
         }
 
-        .thumbnail-container {
+        .thumbnail-panel {
             flex: 1;
-            min-height: 300px;
-            max-height: 500px;
+            min-height: 500px;
+            max-height: 700px;
             overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            background: #f9f9f9;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            background: var(--surface);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
         }
 
-        .page-preview {
+        .preview-panel {
             flex: 2;
             display: flex;
             flex-direction: column;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
-            background: white;
-            min-height: 400px;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            background: var(--surface);
+            box-shadow: var(--shadow-sm);
+            min-height: 600px;
         }
 
         .thumbnail-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
         }
 
         .thumbnail {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 8px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
             background: white;
             cursor: move;
+            transition: var(--transition);
             text-align: center;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
         }
 
         .thumbnail:hover {
-            border-color: #4361ee;
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
         }
 
         .thumbnail.active {
-            border-color: #4361ee;
-            background: #f0f4ff;
+            border-color: var(--primary);
+            background: rgba(94, 53, 177, 0.05);
+            box-shadow: 0 0 0 2px var(--primary-light);
         }
 
         .thumbnail canvas {
-            width: 70px;
-            height: 90px;
+            width: 90px;
+            height: 120px;
             object-fit: contain;
-            border-radius: 2px;
-            border: 1px solid #ddd;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
             background: white;
         }
 
         .thumbnail-info {
-            margin-top: 5px;
-            font-size: 0.8rem;
+            margin-top: 10px;
+            font-size: 0.85rem;
             font-weight: 600;
+            color: var(--text-primary);
         }
 
         .thumbnail-controls {
             position: absolute;
-            top: 5px;
-            right: 5px;
+            top: 8px;
+            right: 8px;
             display: flex;
-            gap: 3px;
+            gap: 6px;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .thumbnail:hover .thumbnail-controls {
+            opacity: 1;
         }
 
         .thumb-btn {
-            width: 20px;
-            height: 20px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             background: white;
-            border: 1px solid #ddd;
-            color: #333;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
             font-size: 0.7rem;
             cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
         }
 
         .thumb-btn:hover {
-            background: #4361ee;
+            background: var(--primary);
             color: white;
-            border-color: #4361ee;
+            border-color: var(--primary);
+        }
+
+        .thumb-btn-add {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .thumb-btn-add:hover {
+            background: #388E3C;
+            border-color: #388E3C;
+        }
+
+        .thumb-btn-delete {
+            background: var(--error);
+            color: white;
+            border-color: var(--error);
+        }
+
+        .thumb-btn-delete:hover {
+            background: #D32F2F;
+            border-color: #D32F2F;
         }
 
         .preview-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
         }
 
         .page-info {
             font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
         }
 
         .preview-content {
@@ -235,43 +472,52 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 20px;
         }
 
         #previewCanvas {
             max-width: 100%;
-            max-height: 350px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            max-height: 450px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
         }
 
         .preview-placeholder {
             text-align: center;
-            color: #666;
-            padding: 30px 15px;
+            color: var(--text-secondary);
+            padding: 60px 30px;
+        }
+
+        .preview-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--border);
+            opacity: 0.5;
         }
 
         .preview-controls {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 12px;
+            margin-top: 20px;
             justify-content: center;
+            align-items: center;
         }
 
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 40px;
         }
 
         .loading-spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(67, 97, 238, 0.2);
-            border-left: 3px solid #4361ee;
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(94, 53, 177, 0.2);
+            border-left: 4px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            margin: 0 auto 20px;
         }
 
         @keyframes spin {
@@ -279,116 +525,253 @@
             100% { transform: rotate(360deg); }
         }
 
-        .error-message {
-            color: #f72585;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #f72585;
-            border-radius: 4px;
-            background: rgba(247, 37, 133, 0.1);
+        .notification {
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: var(--radius-md);
             display: none;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
         }
 
-        .success-message {
-            color: #2a9d8f;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #2a9d8f;
-            border-radius: 4px;
-            background: rgba(42, 157, 143, 0.1);
-            display: none;
+        .notification i {
+            font-size: 1.2rem;
         }
 
-        .status-bar {
+        .error-notification {
+            color: var(--error);
+            border: 1px solid var(--error);
+            background: rgba(229, 57, 53, 0.05);
+        }
+
+        .success-notification {
+            color: var(--success);
+            border: 1px solid var(--success);
+            background: rgba(67, 160, 71, 0.05);
+        }
+
+        .action-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 15px;
-            background: white;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-top: 15px;
-            font-size: 0.9rem;
+            padding: 20px 24px;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            margin-top: 24px;
+            font-size: 0.95rem;
         }
 
         .page-count {
             font-weight: 600;
-            color: #4361ee;
+            color: var(--primary);
+            font-size: 1.1rem;
         }
 
         .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
 
         footer {
             text-align: center;
-            margin-top: 30px;
-            padding: 15px 0;
-            color: #666;
-            font-size: 0.8rem;
-            border-top: 1px solid #ddd;
+            margin-top: 60px;
+            padding: 30px 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
         }
 
-        @media (max-width: 600px) {
-            .action-buttons {
-                flex-direction: column;
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
             }
             
-            .action-buttons button {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 24px;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .thumbnail-list {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            }
+            
+            .action-bar {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .action-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .workspace {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .preview-controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .thumbnail-list {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            }
+            
+            .thumbnail-info {
+                font-size: 0.75rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
                 width: 100%;
             }
+
+            .action-buttons .btn {
+                width: 100%;
+            }
+
+            .thumbnail canvas {
+                width: 70px;
+                height: 100px;
+            }
+
+            .upload-area {
+                padding: 40px 20px;
+            }
+
+            .upload-icon {
+                font-size: 3rem;
+            }
+
+            .upload-text {
+                font-size: 1.2rem;
+            }
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background: rgba(94, 53, 177, 0.1);
+            transform: rotate(5deg);
+        }
+
+        .sortable-chosen {
+            transform: rotate(3deg);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .sortable-drag {
+            opacity: 0.8;
+            transform: rotate(5deg) scale(1.05);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>PDF Rearranger</h1>
-            <p class="subtitle">Atur ulang halaman PDF dengan mudah</p>
+            <div class="logo-container">
+                <div class="logo">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h1>PDF PageMaster</h1>
+            </div>
+            <p class="subtitle">Alat profesional untuk mengatur ulang, menggabungkan, dan memanipulasi halaman PDF dengan antarmuka yang intuitif dan elegan.</p>
+            
         </header>
 
-        <!-- Upload PDF Utama -->
+        <!-- Upload PDF Section -->
         <div class="card" id="uploadCard">
-            <h2>Upload PDF</h2>
-            <div class="upload-section" id="dropZone">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div>
+                    <h2 class="card-title">Unggah PDF</h2>
+                    <p class="card-description">Mulai dengan mengunggah file PDF yang ingin Anda atur</p>
+                </div>
+            </div>
+            <div class="upload-area" id="dropZone">
+                <div class="upload-icon">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
                 <p class="upload-text">Seret file PDF ke sini atau klik untuk memilih</p>
-                <p class="upload-hint">Mendukung file PDF hingga 50MB</p>
-                <button class="btn" id="uploadBtn">Pilih File PDF</button>
+                <p class="upload-hint">Mendukung semua file PDF hingga 50MB</p>
+                <button class="btn" id="uploadBtn">
+                    <i class="fas fa-folder-open"></i> Pilih File PDF
+                </button>
                 <input type="file" id="pdfInput" accept=".pdf" class="file-input">
             </div>
         </div>
 
-        <!-- Edit & Tambah PDF -->
+        <!-- Edit & Rearrange Section -->
         <div class="card" id="editCard" style="display: none;">
-            <h2>Edit & Atur Ulang PDF</h2>
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <div>
+                    <h2 class="card-title">Edit & Atur Ulang PDF</h2>
+                    <p class="card-description">Atur urutan halaman dan lakukan penyesuaian yang diperlukan</p>
+                </div>
+            </div>
 
-            <div class="preview-section">
-                <div class="card thumbnail-container">
-                    <h2>Daftar Halaman</h2>
+            <div class="workspace">
+                <div class="thumbnail-panel">
+                    <h3 class="card-title"><i class="fas fa-th-list"></i> Daftar Halaman</h3>
                     <div class="controls">
-                        <button class="btn" id="moveUp" disabled>Pindah ke Atas</button>
-                        <button class="btn" id="moveDown" disabled>Pindah ke Bawah</button>
+                        <button class="btn btn-outline" id="moveUp" disabled>
+                            <i class="fas fa-arrow-up"></i> Naikkan
+                        </button>
+                        <button class="btn btn-outline" id="moveDown" disabled>
+                            <i class="fas fa-arrow-down"></i> Turunkan
+                        </button>
                     </div>
                     <div class="thumbnail-list" id="thumbnailContainer">
-                        <!-- Thumbnail akan ditampilkan di sini -->
+                        <!-- Thumbnails will be displayed here -->
                     </div>
                 </div>
                 
-                <div class="card page-preview">
+                <div class="preview-panel">
                     <div class="preview-header">
-                        <h2>Preview</h2>
-                        <div class="page-info" id="pageInfo">Pilih halaman untuk preview</div>
+                        <h3 class="card-title"><i class="fas fa-search"></i> Pratinjau Halaman</h3>
+                        <div class="page-info" id="pageInfo">Pilih halaman untuk melihat pratinjau</div>
                     </div>
                     <div class="preview-content">
                         <div class="preview-placeholder" id="previewPlaceholder">
-                            <p>Pilih halaman dari daftar untuk melihat preview</p>
+                            <i class="far fa-file-pdf"></i>
+                            <p>Pilih halaman dari daftar untuk melihat pratinjau</p>
                         </div>
                         <canvas id="previewCanvas" style="display: none;"></canvas>
                     </div>
                     <div class="preview-controls">
-                        <button class="btn" id="previewRotateLeft" disabled>Rotate Kiri</button>
-                        <button class="btn" id="previewRotateRight" disabled>Rotate Kanan</button>
+                        <button class="btn btn-warning" id="previewRotateLeft" disabled>
+                            <i class="fas fa-undo"></i> Putar Kiri
+                        </button>
+                        <button class="btn btn-warning" id="previewRotateRight" disabled>
+                            <i class="fas fa-redo"></i> Putar Kanan
+                        </button>
+                        <button class="btn btn-success" id="addPageAfterPreview">
+                            <i class="fas fa-plus"></i> Tambah Halaman Setelah Ini
+                        </button>
                     </div>
                 </div>
             </div>
@@ -396,28 +779,41 @@
 
         <div class="loading" id="loading">
             <div class="loading-spinner"></div>
-            <p>Memproses PDF...</p>
+            <p>Memproses PDF... Harap tunggu sebentar</p>
         </div>
 
-        <div id="errorMessage" class="error-message"></div>
-        <div id="successMessage" class="success-message"></div>
+        <div id="errorNotification" class="notification error-notification">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="errorMessage"></span>
+        </div>
 
-        <div class="status-bar" id="statusBar" style="display: none;">
+        <div id="successNotification" class="notification success-notification">
+            <i class="fas fa-check-circle"></i>
+            <span id="successMessage"></span>
+        </div>
+
+        <div class="action-bar" id="actionBar" style="display: none;">
             <div class="page-count" id="pageCount">0 halaman</div>
             <div class="action-buttons">
-                <button class="btn" id="backToUploadBtn">Kembali ke Upload</button>
-                <button class="btn" id="addMorePdfBtn">Tambah PDF Lain</button>
-                <button class="btn btn-success" id="savePdf" disabled>Unduh PDF</button>
+                <button class="btn btn-outline" id="backToUploadBtn">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </button>
+                <button class="btn btn-secondary" id="addMorePdfBtn">
+                    <i class="fas fa-plus"></i> Tambah PDF
+                </button>
+                <button class="btn btn-success" id="savePdf" disabled>
+                    <i class="fas fa-download"></i> Unduh PDF
+                </button>
             </div>
         </div>
 
         <footer>
-            <p>PDF Rearranger &copy; 2023</p>
+            <p>PDF PageMaster &copy; 2023 - Alat profesional untuk mengatur halaman PDF</p>
         </footer>
     </div>
 
     <script>
-        class PDFRearrangerApp {
+        class PDFPageMaster {
             constructor() {
                 this.pdfDocs = new Map();
                 this.thumbnails = [];
@@ -425,10 +821,11 @@
                 this.pageRotations = {};
                 this.originalFiles = new Map();
                 this.isProcessing = false;
+                this.sortable = null;
                 
                 // Standard thumbnail dimensions
-                this.thumbnailWidth = 70;
-                this.thumbnailHeight = 90;
+                this.thumbnailWidth = 90;
+                this.thumbnailHeight = 120;
                 
                 this.initializeElements();
                 this.bindEvents();
@@ -445,9 +842,6 @@
                 this.uploadBtn = document.getElementById('uploadBtn');
                 this.dropZone = document.getElementById('dropZone');
                 
-                // Insert elements
-                this.addMorePdfBtn = document.getElementById('addMorePdfBtn');
-                
                 // Control elements
                 this.moveUp = document.getElementById('moveUp');
                 this.moveDown = document.getElementById('moveDown');
@@ -459,15 +853,19 @@
                 this.previewRotateLeft = document.getElementById('previewRotateLeft');
                 this.previewRotateRight = document.getElementById('previewRotateRight');
                 this.previewPlaceholder = document.getElementById('previewPlaceholder');
+                this.addPageAfterPreview = document.getElementById('addPageAfterPreview');
                 
                 // Status elements
                 this.pageCount = document.getElementById('pageCount');
                 this.savePdf = document.getElementById('savePdf');
                 this.backToUploadBtn = document.getElementById('backToUploadBtn');
-                this.statusBar = document.getElementById('statusBar');
+                this.addMorePdfBtn = document.getElementById('addMorePdfBtn');
+                this.actionBar = document.getElementById('actionBar');
                 
                 // Utility elements
                 this.loading = document.getElementById('loading');
+                this.errorNotification = document.getElementById('errorNotification');
+                this.successNotification = document.getElementById('successNotification');
                 this.errorMessage = document.getElementById('errorMessage');
                 this.successMessage = document.getElementById('successMessage');
             }
@@ -488,6 +886,7 @@
                 this.moveDown.addEventListener('click', () => this.movePageDown());
                 this.previewRotateLeft.addEventListener('click', () => this.rotateCurrentPage(-90));
                 this.previewRotateRight.addEventListener('click', () => this.rotateCurrentPage(90));
+                this.addPageAfterPreview.addEventListener('click', () => this.showInsertPdfAfterCurrent());
                 
                 // Action events
                 this.savePdf.addEventListener('click', () => this.saveRearrangedPdf());
@@ -497,19 +896,16 @@
             setupDragAndDrop(dropZone, callback) {
                 dropZone.addEventListener('dragover', (e) => {
                     e.preventDefault();
-                    dropZone.style.borderColor = '#4361ee';
-                    dropZone.style.background = '#f0f4ff';
+                    dropZone.classList.add('drag-over');
                 });
         
                 dropZone.addEventListener('dragleave', () => {
-                    dropZone.style.borderColor = '#ccc';
-                    dropZone.style.background = '#f9f9f9';
+                    dropZone.classList.remove('drag-over');
                 });
         
                 dropZone.addEventListener('drop', (e) => {
                     e.preventDefault();
-                    dropZone.style.borderColor = '#ccc';
-                    dropZone.style.background = '#f9f9f9';
+                    dropZone.classList.remove('drag-over');
                     
                     const files = e.dataTransfer.files;
                     if (files.length > 0) {
@@ -538,6 +934,22 @@
                 document.body.appendChild(input);
                 input.click();
             }
+
+            showInsertPdfAfterCurrent() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.pdf';
+                input.multiple = true;
+                input.style.display = 'none';
+                
+                input.addEventListener('change', (e) => {
+                    this.handleInsertPdfAfterCurrent(Array.from(e.target.files));
+                    document.body.removeChild(input);
+                });
+                
+                document.body.appendChild(input);
+                input.click();
+            }
         
             async handleFileUpload(file, isMainPdf = false) {
                 if (!file || file.type !== 'application/pdf') {
@@ -557,6 +969,19 @@
                 for (let file of files) {
                     if (file.type === 'application/pdf') {
                         await this.loadPdf(file, false);
+                    }
+                }
+            }
+
+            async handleInsertPdfAfterCurrent(files) {
+                if (!this.thumbnails.length) {
+                    this.showError('Upload PDF utama terlebih dahulu!');
+                    return;
+                }
+
+                for (let file of files) {
+                    if (file.type === 'application/pdf') {
+                        await this.loadPdfAfterCurrent(file);
                     }
                 }
             }
@@ -602,6 +1027,42 @@
         
                     const action = isMainPdf ? 'diunggah' : 'ditambahkan';
                     this.showMessage(`PDF berhasil ${action}! ${pdfDoc.numPages} halaman ditambahkan.`, 'success');
+                    this.enableControls(true);
+        
+                } catch (error) {
+                    console.error('Error loading PDF:', error);
+                    this.showError('Error memuat file PDF: ' + error.message);
+                } finally {
+                    this.isProcessing = false;
+                    this.showLoading(false);
+                }
+            }
+
+            async loadPdfAfterCurrent(file) {
+                if (this.isProcessing) return;
+                
+                this.isProcessing = true;
+                this.showLoading(true);
+                this.hideMessages();
+        
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    
+                    // Simpan PDF document dan file original
+                    const pdfId = `pdf_${Date.now()}`;
+                    this.pdfDocs.set(pdfId, pdfDoc);
+                    this.originalFiles.set(pdfId, file);
+        
+                    // Generate thumbnails untuk setiap halaman dan tambahkan setelah current page
+                    for (let i = 0; i < pdfDoc.numPages; i++) {
+                        await this.createThumbnailAfterCurrent(pdfId, i);
+                    }
+        
+                    this.updatePageCount();
+                    this.initializeSortable();
+        
+                    this.showMessage(`PDF berhasil ditambahkan setelah halaman ${this.currentPage + 1}! ${pdfDoc.numPages} halaman ditambahkan.`, 'success');
                     this.enableControls(true);
         
                 } catch (error) {
@@ -666,6 +1127,63 @@
                 this.thumbnails.push(thumbnail);
                 this.thumbnailContainer.appendChild(thumbnail.element);
             }
+
+            async createThumbnailAfterCurrent(pdfId, pageIndex) {
+                const pdfDoc = this.pdfDocs.get(pdfId);
+                const page = await pdfDoc.getPage(pageIndex + 1);
+                
+                // Calculate scale to fit thumbnail dimensions while maintaining aspect ratio
+                const viewport = page.getViewport({ scale: 1.0 });
+                const aspectRatio = viewport.width / viewport.height;
+                
+                let scale;
+                if (aspectRatio > (this.thumbnailWidth / this.thumbnailHeight)) {
+                    // Width is the limiting factor
+                    scale = this.thumbnailWidth / viewport.width;
+                } else {
+                    // Height is the limiting factor
+                    scale = this.thumbnailHeight / viewport.height;
+                }
+                
+                const thumbnailViewport = page.getViewport({ scale: scale });
+                
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                // Set fixed dimensions for all thumbnails
+                canvas.width = this.thumbnailWidth;
+                canvas.height = this.thumbnailHeight;
+                
+                // Clear canvas with white background
+                context.fillStyle = 'white';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Calculate position to center the thumbnail
+                const x = (canvas.width - thumbnailViewport.width) / 2;
+                const y = (canvas.height - thumbnailViewport.height) / 2;
+                
+                await page.render({
+                    canvasContext: context,
+                    viewport: thumbnailViewport,
+                    transform: [1, 0, 0, 1, x, y]
+                }).promise;
+        
+                const insertPosition = this.currentPage + 1;
+                const thumbnail = {
+                    id: `thumb_${pdfId}_${pageIndex}`,
+                    pdfId: pdfId,
+                    pageIndex: pageIndex,
+                    canvas: canvas,
+                    rotation: 0,
+                    element: this.createThumbnailElement(canvas, insertPosition)
+                };
+        
+                this.thumbnails.splice(insertPosition, 0, thumbnail);
+                this.updateThumbnailsDisplay();
+                
+                // Tampilkan halaman yang baru ditambahkan
+                this.showPage(insertPosition);
+            }
         
             createThumbnailElement(canvas, pageNumber) {
                 const container = document.createElement('div');
@@ -678,11 +1196,45 @@
                 
                 const controls = document.createElement('div');
                 controls.className = 'thumbnail-controls';
-                controls.innerHTML = `
-                    <button class="thumb-btn" onclick="app.rotateThumbnail(${pageNumber}, -90)">↶</button>
-                    <button class="thumb-btn" onclick="app.rotateThumbnail(${pageNumber}, 90)">↷</button>
-                    <button class="thumb-btn" onclick="app.deleteThumbnail(${pageNumber})">×</button>
-                `;
+                
+                // Create buttons with proper event listeners
+                const addBtn = document.createElement('button');
+                addBtn.className = 'thumb-btn thumb-btn-add';
+                addBtn.innerHTML = '+';
+                addBtn.title = 'Tambah halaman setelah ini';
+                addBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.showInsertPdfAfterPage(pageNumber);
+                });
+                
+                const rotateLeftBtn = document.createElement('button');
+                rotateLeftBtn.className = 'thumb-btn';
+                rotateLeftBtn.innerHTML = '↶';
+                rotateLeftBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.rotateThumbnail(pageNumber, -90);
+                });
+                
+                const rotateRightBtn = document.createElement('button');
+                rotateRightBtn.className = 'thumb-btn';
+                rotateRightBtn.innerHTML = '↷';
+                rotateRightBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.rotateThumbnail(pageNumber, 90);
+                });
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'thumb-btn thumb-btn-delete';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.deleteThumbnail(pageNumber);
+                });
+                
+                controls.appendChild(addBtn);
+                controls.appendChild(rotateLeftBtn);
+                controls.appendChild(rotateRightBtn);
+                controls.appendChild(deleteBtn);
                 
                 container.appendChild(canvas);
                 container.appendChild(thumbnailInfo);
@@ -696,17 +1248,47 @@
         
                 return container;
             }
+
+            showInsertPdfAfterPage(pageNumber) {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.pdf';
+                input.multiple = true;
+                input.style.display = 'none';
+                
+                // Simpan pageNumber yang dipilih untuk digunakan nanti
+                const targetPage = pageNumber;
+                
+                input.addEventListener('change', (e) => {
+                    // Simpan currentPage sementara
+                    const originalCurrentPage = this.currentPage;
+                    
+                    // Set currentPage ke page yang dipilih
+                    this.currentPage = targetPage;
+                    
+                    // Handle insert PDF setelah currentPage
+                    this.handleInsertPdfAfterCurrent(Array.from(e.target.files));
+                    
+                    // Kembalikan currentPage ke semula
+                    this.currentPage = originalCurrentPage;
+                    
+                    document.body.removeChild(input);
+                });
+                
+                document.body.appendChild(input);
+                input.click();
+            }
         
             showEditSection() {
                 this.uploadCard.style.display = 'none';
                 this.editCard.style.display = 'block';
-                this.statusBar.style.display = 'flex';
+                this.actionBar.style.display = 'flex';
             }
         
             backToUpload() {
                 this.editCard.style.display = 'none';
                 this.uploadCard.style.display = 'block';
-                this.statusBar.style.display = 'none';
+                this.actionBar.style.display = 'none';
                 
                 this.showMessage('Silakan upload PDF baru atau lanjutkan editing.', 'success');
             }
@@ -739,15 +1321,26 @@
                 }
         
                 this.sortable = Sortable.create(this.thumbnailContainer, {
-                    animation: 150,
+                    animation: 200,
                     ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    handle: '.thumbnail',
+                    onStart: () => {
+                        document.body.style.cursor = 'grabbing';
+                    },
                     onEnd: (evt) => {
+                        document.body.style.cursor = '';
                         const oldIndex = evt.oldIndex;
                         const newIndex = evt.newIndex;
                         
                         if (oldIndex !== newIndex) {
-                            const [movedItem] = this.thumbnails.splice(oldIndex, 1);
-                            this.thumbnails.splice(newIndex, 0, movedItem);
+                            // Simpan thumbnail yang dipindahkan
+                            const movedThumbnail = this.thumbnails[oldIndex];
+                            
+                            // Hapus dari posisi lama dan tambahkan ke posisi baru
+                            this.thumbnails.splice(oldIndex, 1);
+                            this.thumbnails.splice(newIndex, 0, movedThumbnail);
                             
                             // Update current page
                             if (this.currentPage === oldIndex) {
@@ -758,7 +1351,10 @@
                                 this.currentPage++;
                             }
                             
+                            // Update tampilan thumbnail
                             this.updateThumbnailsDisplay();
+                            
+                            // Tampilkan halaman yang sedang aktif
                             this.showPage(this.currentPage);
                         }
                     }
@@ -777,34 +1373,40 @@
         
                 const thumbnail = this.thumbnails[pageNumber];
                 const pdfDoc = this.pdfDocs.get(thumbnail.pdfId);
-                const page = await pdfDoc.getPage(thumbnail.pageIndex + 1);
                 
-                // Apply rotation
-                const rotation = thumbnail.rotation || 0;
-                const viewport = page.getViewport({ 
-                    scale: 1.0,
-                    rotation: rotation
-                });
-                
-                const context = this.previewCanvas.getContext('2d');
-                this.previewCanvas.width = viewport.width;
-                this.previewCanvas.height = viewport.height;
-                
-                // Clear canvas
-                context.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
-                
-                this.pageInfo.textContent = `Halaman ${pageNumber + 1} (Rotasi: ${rotation}°)`;
-                
-                await page.render({
-                    canvasContext: context,
-                    viewport: viewport
-                }).promise;
-                
-                // Show canvas and hide placeholder
-                this.previewCanvas.style.display = 'block';
-                this.previewPlaceholder.style.display = 'none';
-                
-                this.enablePreviewControls(true);
+                try {
+                    const page = await pdfDoc.getPage(thumbnail.pageIndex + 1);
+                    
+                    // Apply rotation
+                    const rotation = thumbnail.rotation || 0;
+                    const viewport = page.getViewport({ 
+                        scale: 1.0,
+                        rotation: rotation
+                    });
+                    
+                    const context = this.previewCanvas.getContext('2d');
+                    this.previewCanvas.width = viewport.width;
+                    this.previewCanvas.height = viewport.height;
+                    
+                    // Clear canvas
+                    context.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+                    
+                    this.pageInfo.textContent = `Halaman ${pageNumber + 1} (Rotasi: ${rotation}°)`;
+                    
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+                    
+                    // Show canvas and hide placeholder
+                    this.previewCanvas.style.display = 'block';
+                    this.previewPlaceholder.style.display = 'none';
+                    
+                    this.enablePreviewControls(true);
+                } catch (error) {
+                    console.error('Error showing page:', error);
+                    this.showError('Gagal menampilkan halaman: ' + error.message);
+                }
             }
         
             rotateThumbnail(pageNumber, degrees) {
@@ -890,22 +1492,24 @@
             }
         
             updateThumbnailsDisplay() {
+                // Kosongkan container
                 this.thumbnailContainer.innerHTML = '';
+                
+                // Tambahkan semua thumbnail dengan urutan yang benar
                 this.thumbnails.forEach((thumb, index) => {
-                    thumb.element.dataset.index = index;
-                    thumb.element.querySelector('.thumbnail-info').textContent = `Halaman ${index + 1}`;
+                    // Buat elemen baru untuk menghindari masalah event listeners
+                    const newElement = this.createThumbnailElement(thumb.canvas, index);
+                    thumb.element = newElement;
                     
-                    // Update event listeners untuk tombol
-                    const controls = thumb.element.querySelector('.thumbnail-controls');
-                    controls.innerHTML = `
-                        <button class="thumb-btn" onclick="app.rotateThumbnail(${index}, -90)">↶</button>
-                        <button class="thumb-btn" onclick="app.rotateThumbnail(${index}, 90)">↷</button>
-                        <button class="thumb-btn" onclick="app.deleteThumbnail(${index})">×</button>
-                    `;
+                    // Set active state jika ini adalah current page
+                    if (index === this.currentPage) {
+                        newElement.classList.add('active');
+                    }
                     
-                    this.thumbnailContainer.appendChild(thumb.element);
+                    this.thumbnailContainer.appendChild(newElement);
                 });
                 
+                // Re-initialize sortable
                 this.initializeSortable();
             }
         
@@ -969,7 +1573,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'pdf-rearranged.pdf';
+                a.download = 'pdf-pagemaster-rearranged.pdf';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -980,11 +1584,13 @@
                 this.moveUp.disabled = !enabled;
                 this.moveDown.disabled = !enabled;
                 this.savePdf.disabled = !enabled || this.thumbnails.length === 0;
+                this.addPageAfterPreview.disabled = !enabled;
             }
         
             enablePreviewControls(enabled) {
                 this.previewRotateLeft.disabled = !enabled;
                 this.previewRotateRight.disabled = !enabled;
+                this.addPageAfterPreview.disabled = !enabled;
             }
         
             showLoading(show) {
@@ -993,30 +1599,30 @@
         
             showError(message) {
                 this.errorMessage.textContent = message;
-                this.errorMessage.style.display = 'block';
-                this.successMessage.style.display = 'none';
+                this.errorNotification.style.display = 'flex';
+                this.successNotification.style.display = 'none';
             }
         
             showMessage(message, type = 'success') {
                 if (type === 'success') {
                     this.successMessage.textContent = message;
-                    this.successMessage.style.display = 'block';
-                    this.errorMessage.style.display = 'none';
+                    this.successNotification.style.display = 'flex';
+                    this.errorNotification.style.display = 'none';
                 } else {
                     this.showError(message);
                 }
             }
         
             hideMessages() {
-                this.errorMessage.style.display = 'none';
-                this.successMessage.style.display = 'none';
+                this.errorNotification.style.display = 'none';
+                this.successNotification.style.display = 'none';
             }
         }
         
         // Initialize application
         let app;
         document.addEventListener('DOMContentLoaded', () => {
-            app = new PDFRearrangerApp();
+            app = new PDFPageMaster();
         });
     </script>
 </body>
