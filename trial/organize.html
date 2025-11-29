@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF PageMaster | Alat Pengatur Halaman PDF Profesional</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <title>PDF PageMaster - Manipulasi Halaman PDF</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
     <style>
+        /* CSS yang sudah ada... */
         :root {
             --primary: #5E35B1;
             --primary-light: #7E57C2;
@@ -254,7 +255,8 @@
         }
 
         .btn:disabled {
-            background: var(--text-secondary);
+            background: var(--text-primary);
+            color: var(--border);
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
@@ -504,10 +506,59 @@
             align-items: center;
         }
 
-        .loading {
+        /* Loading Bar Styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
             display: none;
-            text-align: center;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading-content {
+            background: white;
             padding: 40px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            height: 12px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .progress-details {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 10px;
         }
 
         .loading-spinner {
@@ -683,6 +734,15 @@
             opacity: 0.8;
             transform: rotate(5deg) scale(1.05);
         }
+
+        .thumbnail-image {
+            width: auto;
+            height: 100%;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: white;
+        }
     </style>
 </head>
 <body>
@@ -695,8 +755,23 @@
                 <h1>PDF PageMaster</h1>
             </div>
             <p class="subtitle">Alat profesional untuk mengatur ulang, menggabungkan, dan memanipulasi halaman PDF dengan antarmuka yang intuitif dan elegan.</p>
-            
         </header>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <h3 id="loadingTitle">Memproses PDF</h3>
+                <div class="progress-text" id="progressText">0%</div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="progress-details" id="progressDetails">Mempersiapkan...</div>
+                <button class="btn btn-outline" id="cancelBtn" style="margin-top: 20px;">
+                    <i class="fas fa-times"></i> Batalkan
+                </button>
+            </div>
+        </div>
 
         <!-- Upload PDF Section -->
         <div class="card" id="uploadCard">
@@ -714,7 +789,7 @@
                     <i class="fas fa-file-pdf"></i>
                 </div>
                 <p class="upload-text">Seret file PDF ke sini atau klik untuk memilih</p>
-                <p class="upload-hint">Mendukung semua file PDF hingga 50MB</p>
+                <p class="upload-hint">Mendukung semua file PDF</p>
                 <button class="btn" id="uploadBtn">
                     <i class="fas fa-folder-open"></i> Pilih File PDF
                 </button>
@@ -777,11 +852,6 @@
             </div>
         </div>
 
-        <div class="loading" id="loading">
-            <div class="loading-spinner"></div>
-            <p>Memproses PDF... Harap tunggu sebentar</p>
-        </div>
-
         <div id="errorNotification" class="notification error-notification">
             <i class="fas fa-exclamation-circle"></i>
             <span id="errorMessage"></span>
@@ -801,7 +871,7 @@
                 <button class="btn btn-secondary" id="addMorePdfBtn">
                     <i class="fas fa-plus"></i> Tambah PDF
                 </button>
-                <button class="btn btn-success" id="savePdf" disabled>
+                <button class="btn btn-success" id="savePdfBtn">
                     <i class="fas fa-download"></i> Unduh PDF
                 </button>
             </div>
@@ -813,817 +883,916 @@
     </div>
 
     <script>
-        class PDFPageMaster {
-            constructor() {
-                this.pdfDocs = new Map();
-                this.thumbnails = [];
-                this.currentPage = 0;
-                this.pageRotations = {};
-                this.originalFiles = new Map();
-                this.isProcessing = false;
-                this.sortable = null;
-                
-                // Standard thumbnail dimensions
-                this.thumbnailWidth = 90;
-                this.thumbnailHeight = 120;
-                
-                this.initializeElements();
-                this.bindEvents();
-                this.showMessage('Silakan upload PDF untuk memulai.', 'success');
+        // Konfigurasi PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // State aplikasi
+        const state = {
+            pdfDocs: new Map(),
+            thumbnails: [],
+            currentPageIndex: 0,
+            pageRotations: {},
+            originalFiles: new Map(),
+            nextPdfId: 1,
+            isProcessing: false
+        };
+
+        // Elemen DOM
+        const uploadCard = document.getElementById('uploadCard');
+        const editCard = document.getElementById('editCard');
+        const dropZone = document.getElementById('dropZone');
+        const pdfInput = document.getElementById('pdfInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const thumbnailContainer = document.getElementById('thumbnailContainer');
+        const previewCanvas = document.getElementById('previewCanvas');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const pageInfo = document.getElementById('pageInfo');
+        const moveUpBtn = document.getElementById('moveUp');
+        const moveDownBtn = document.getElementById('moveDown');
+        const previewRotateLeft = document.getElementById('previewRotateLeft');
+        const previewRotateRight = document.getElementById('previewRotateRight');
+        const addPageAfterPreview = document.getElementById('addPageAfterPreview');
+        const errorNotification = document.getElementById('errorNotification');
+        const errorMessage = document.getElementById('errorMessage');
+        const successNotification = document.getElementById('successNotification');
+        const successMessage = document.getElementById('successMessage');
+        const actionBar = document.getElementById('actionBar');
+        const pageCount = document.getElementById('pageCount');
+        const backToUploadBtn = document.getElementById('backToUploadBtn');
+        const addMorePdfBtn = document.getElementById('addMorePdfBtn');
+        const savePdfBtn = document.getElementById('savePdfBtn');
+        
+        // Loading elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingTitle = document.getElementById('loadingTitle');
+        const progressText = document.getElementById('progressText');
+        const progressBar = document.getElementById('progressBar');
+        const progressDetails = document.getElementById('progressDetails');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        // Event Listeners
+        uploadBtn.addEventListener('click', () => pdfInput.click());
+        pdfInput.addEventListener('change', handleFileSelect);
+        dropZone.addEventListener('dragover', handleDragOver);
+        dropZone.addEventListener('dragleave', handleDragLeave);
+        dropZone.addEventListener('drop', handleDrop);
+        previewRotateLeft.addEventListener('click', () => rotatePage(-90));
+        previewRotateRight.addEventListener('click', () => rotatePage(90));
+        moveUpBtn.addEventListener('click', movePageUp);
+        moveDownBtn.addEventListener('click', movePageDown);
+        addPageAfterPreview.addEventListener('click', insertPdfAfterCurrent);
+        backToUploadBtn.addEventListener('click', backToUpload);
+        addMorePdfBtn.addEventListener('click', () => pdfInput.click());
+        savePdfBtn.addEventListener('click', savePdfFile);
+        cancelBtn.addEventListener('click', cancelProcessing);
+
+        // Fungsi untuk membatalkan proses
+        function cancelProcessing() {
+            state.isProcessing = false;
+            hideLoading();
+            showNotification('Proses dibatalkan', 'warning');
+        }
+
+        // Fungsi untuk menampilkan loading dengan progress
+        function showLoading(title = 'Memproses PDF') {
+            loadingTitle.textContent = title;
+            progressText.textContent = '0%';
+            progressBar.style.width = '0%';
+            progressDetails.textContent = 'Mempersiapkan...';
+            loadingOverlay.style.display = 'flex';
+            state.isProcessing = true;
+        }
+
+        // Fungsi untuk memperbarui progress
+        function updateProgress(percent, details = '') {
+            const roundedPercent = Math.round(percent);
+            progressText.textContent = `${roundedPercent}%`;
+            progressBar.style.width = `${roundedPercent}%`;
+            if (details) {
+                progressDetails.textContent = details;
             }
-        
-            initializeElements() {
-                // Card elements
-                this.uploadCard = document.getElementById('uploadCard');
-                this.editCard = document.getElementById('editCard');
-                
-                // Upload elements
-                this.pdfInput = document.getElementById('pdfInput');
-                this.uploadBtn = document.getElementById('uploadBtn');
-                this.dropZone = document.getElementById('dropZone');
-                
-                // Control elements
-                this.moveUp = document.getElementById('moveUp');
-                this.moveDown = document.getElementById('moveDown');
-                
-                // Preview elements
-                this.thumbnailContainer = document.getElementById('thumbnailContainer');
-                this.previewCanvas = document.getElementById('previewCanvas');
-                this.pageInfo = document.getElementById('pageInfo');
-                this.previewRotateLeft = document.getElementById('previewRotateLeft');
-                this.previewRotateRight = document.getElementById('previewRotateRight');
-                this.previewPlaceholder = document.getElementById('previewPlaceholder');
-                this.addPageAfterPreview = document.getElementById('addPageAfterPreview');
-                
-                // Status elements
-                this.pageCount = document.getElementById('pageCount');
-                this.savePdf = document.getElementById('savePdf');
-                this.backToUploadBtn = document.getElementById('backToUploadBtn');
-                this.addMorePdfBtn = document.getElementById('addMorePdfBtn');
-                this.actionBar = document.getElementById('actionBar');
-                
-                // Utility elements
-                this.loading = document.getElementById('loading');
-                this.errorNotification = document.getElementById('errorNotification');
-                this.successNotification = document.getElementById('successNotification');
-                this.errorMessage = document.getElementById('errorMessage');
-                this.successMessage = document.getElementById('successMessage');
+        }
+
+        // Fungsi untuk menyembunyikan loading
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+            state.isProcessing = false;
+        }
+
+        // Fungsi untuk menangani drag over
+        function handleDragOver(e) {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        }
+
+        // Fungsi untuk menangani drag leave
+        function handleDragLeave(e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+        }
+
+        // Fungsi untuk menangani drop
+        function handleDrop(e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'application/pdf');
+            
+            if (files.length > 0) {
+                processFiles(files);
+            } else {
+                showNotification('Silakan unggah file PDF yang valid', 'error');
             }
-        
-            bindEvents() {
-                // Upload events
-                this.uploadBtn.addEventListener('click', () => this.pdfInput.click());
-                this.pdfInput.addEventListener('change', (e) => this.handleFileUpload(e.target.files[0], true));
-                
-                // Drag and drop for main PDF
-                this.setupDragAndDrop(this.dropZone, (file) => this.handleFileUpload(file, true));
-                
-                // Add more PDF events
-                this.addMorePdfBtn.addEventListener('click', () => this.showInsertPdfDialog());
-                
-                // Control events
-                this.moveUp.addEventListener('click', () => this.movePageUp());
-                this.moveDown.addEventListener('click', () => this.movePageDown());
-                this.previewRotateLeft.addEventListener('click', () => this.rotateCurrentPage(-90));
-                this.previewRotateRight.addEventListener('click', () => this.rotateCurrentPage(90));
-                this.addPageAfterPreview.addEventListener('click', () => this.showInsertPdfAfterCurrent());
-                
-                // Action events
-                this.savePdf.addEventListener('click', () => this.saveRearrangedPdf());
-                this.backToUploadBtn.addEventListener('click', () => this.backToUpload());
+        }
+
+        // Fungsi untuk menangani pemilihan file
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files).filter(file => file.type === 'application/pdf');
+            
+            if (files.length > 0) {
+                processFiles(files);
+            } else {
+                showNotification('Silakan pilih file PDF yang valid', 'error');
             }
-        
-            setupDragAndDrop(dropZone, callback) {
-                dropZone.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    dropZone.classList.add('drag-over');
-                });
-        
-                dropZone.addEventListener('dragleave', () => {
-                    dropZone.classList.remove('drag-over');
-                });
-        
-                dropZone.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    dropZone.classList.remove('drag-over');
+            
+            // Reset input file
+            e.target.value = '';
+        }
+
+        // Fungsi untuk memproses file PDF
+        async function processFiles(files) {
+            try {
+                showLoading('Memuat PDF...');
+                
+                let processedFiles = 0;
+                for (const file of files) {
+                    if (!state.isProcessing) break;
                     
-                    const files = e.dataTransfer.files;
-                    if (files.length > 0) {
-                        const pdfFile = Array.from(files).find(file => file.type === 'application/pdf');
-                        if (pdfFile) {
-                            callback(pdfFile);
-                        } else {
-                            this.showError('Harap unggah file PDF yang valid');
-                        }
-                    }
-                });
-            }
-        
-            showInsertPdfDialog() {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.pdf';
-                input.multiple = true;
-                input.style.display = 'none';
-                
-                input.addEventListener('change', (e) => {
-                    this.handleInsertPdf(Array.from(e.target.files));
-                    document.body.removeChild(input);
-                });
-                
-                document.body.appendChild(input);
-                input.click();
-            }
-
-            showInsertPdfAfterCurrent() {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.pdf';
-                input.multiple = true;
-                input.style.display = 'none';
-                
-                input.addEventListener('change', (e) => {
-                    this.handleInsertPdfAfterCurrent(Array.from(e.target.files));
-                    document.body.removeChild(input);
-                });
-                
-                document.body.appendChild(input);
-                input.click();
-            }
-        
-            async handleFileUpload(file, isMainPdf = false) {
-                if (!file || file.type !== 'application/pdf') {
-                    this.showError('Harap pilih file PDF yang valid');
-                    return;
-                }
-        
-                await this.loadPdf(file, isMainPdf);
-            }
-        
-            async handleInsertPdf(files) {
-                if (!this.thumbnails.length) {
-                    this.showError('Upload PDF utama terlebih dahulu!');
-                    return;
-                }
-        
-                for (let file of files) {
-                    if (file.type === 'application/pdf') {
-                        await this.loadPdf(file, false);
-                    }
-                }
-            }
-
-            async handleInsertPdfAfterCurrent(files) {
-                if (!this.thumbnails.length) {
-                    this.showError('Upload PDF utama terlebih dahulu!');
-                    return;
-                }
-
-                for (let file of files) {
-                    if (file.type === 'application/pdf') {
-                        await this.loadPdfAfterCurrent(file);
-                    }
-                }
-            }
-        
-            async loadPdf(file, isMainPdf = false) {
-                if (this.isProcessing) return;
-                
-                this.isProcessing = true;
-                this.showLoading(true);
-                this.hideMessages();
-        
-                try {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    updateProgress(
+                        (processedFiles / files.length) * 100,
+                        `Memproses file ${processedFiles + 1} dari ${files.length}`
+                    );
                     
-                    // Simpan PDF document dan file original
-                    const pdfId = `pdf_${Date.now()}`;
-                    this.pdfDocs.set(pdfId, pdfDoc);
-                    this.originalFiles.set(pdfId, file);
-        
-                    if (isMainPdf) {
-                        // Reset untuk PDF utama
-                        this.thumbnails = [];
-                        this.pageRotations = {};
-                        this.currentPage = 0;
-                        this.thumbnailContainer.innerHTML = '';
-                        
-                        // Show edit section
-                        this.showEditSection();
-                    }
-        
-                    // Generate thumbnails untuk setiap halaman
-                    for (let i = 0; i < pdfDoc.numPages; i++) {
-                        await this.createThumbnail(pdfId, i);
-                    }
-        
-                    this.updatePageCount();
-                    this.initializeSortable();
-        
-                    if (this.thumbnails.length > 0) {
-                        this.showPage(isMainPdf ? 0 : this.thumbnails.length - 1);
-                    }
-        
-                    const action = isMainPdf ? 'diunggah' : 'ditambahkan';
-                    this.showMessage(`PDF berhasil ${action}! ${pdfDoc.numPages} halaman ditambahkan.`, 'success');
-                    this.enableControls(true);
-        
-                } catch (error) {
-                    console.error('Error loading PDF:', error);
-                    this.showError('Error memuat file PDF: ' + error.message);
-                } finally {
-                    this.isProcessing = false;
-                    this.showLoading(false);
+                    await loadPdf(file);
+                    processedFiles++;
                 }
-            }
-
-            async loadPdfAfterCurrent(file) {
-                if (this.isProcessing) return;
                 
-                this.isProcessing = true;
-                this.showLoading(true);
-                this.hideMessages();
-        
-                try {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                if (state.isProcessing) {
+                    hideLoading();
+                    showNotification(`Berhasil memuat ${files.length} file PDF`, 'success');
                     
-                    // Simpan PDF document dan file original
-                    const pdfId = `pdf_${Date.now()}`;
-                    this.pdfDocs.set(pdfId, pdfDoc);
-                    this.originalFiles.set(pdfId, file);
-        
-                    // Generate thumbnails untuk setiap halaman dan tambahkan setelah current page
-                    for (let i = 0; i < pdfDoc.numPages; i++) {
-                        await this.createThumbnailAfterCurrent(pdfId, i);
-                    }
-        
-                    this.updatePageCount();
-                    this.initializeSortable();
-        
-                    this.showMessage(`PDF berhasil ditambahkan setelah halaman ${this.currentPage + 1}! ${pdfDoc.numPages} halaman ditambahkan.`, 'success');
-                    this.enableControls(true);
-        
-                } catch (error) {
-                    console.error('Error loading PDF:', error);
-                    this.showError('Error memuat file PDF: ' + error.message);
-                } finally {
-                    this.isProcessing = false;
-                    this.showLoading(false);
+                    // Tampilkan edit card dan action bar
+                    uploadCard.style.display = 'none';
+                    editCard.style.display = 'block';
+                    actionBar.style.display = 'flex';
+                    
+                    // Perbarui jumlah halaman
+                    updatePageCount();
+                    
+                    // Inisialisasi sortable untuk thumbnail grid
+                    initSortable();
                 }
+                
+            } catch (error) {
+                console.error('Error processing PDF files:', error);
+                showNotification('Gagal memuat file PDF: ' + error.message, 'error');
+                hideLoading();
             }
-        
-            async createThumbnail(pdfId, pageIndex) {
-                const pdfDoc = this.pdfDocs.get(pdfId);
-                const page = await pdfDoc.getPage(pageIndex + 1);
+        }
+
+        // Fungsi untuk memuat PDF
+        async function loadPdf(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const pdfId = `pdf-${state.nextPdfId++}`;
                 
-                // Calculate scale to fit thumbnail dimensions while maintaining aspect ratio
-                const viewport = page.getViewport({ scale: 1.0 });
-                const aspectRatio = viewport.width / viewport.height;
+                state.pdfDocs.set(pdfId, pdfDoc);
+                state.originalFiles.set(pdfId, file);
                 
-                let scale;
-                if (aspectRatio > (this.thumbnailWidth / this.thumbnailHeight)) {
-                    // Width is the limiting factor
-                    scale = this.thumbnailWidth / viewport.width;
-                } else {
-                    // Height is the limiting factor
-                    scale = this.thumbnailHeight / viewport.height;
+                console.log(`Memuat PDF dengan ${pdfDoc.numPages} halaman`);
+                
+                // Render semua halaman sebagai thumbnail
+                for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+                    if (!state.isProcessing) break;
+                    
+                    updateProgress(
+                        (pageNum / pdfDoc.numPages) * 100,
+                        `Membuat thumbnail halaman ${pageNum} dari ${pdfDoc.numPages}`
+                    );
+                    
+                    await renderThumbnail(pdfId, pageNum);
                 }
                 
-                const thumbnailViewport = page.getViewport({ scale: scale });
+                // Tampilkan halaman pertama sebagai preview
+                if (state.thumbnails.length > 0 && state.currentPageIndex === 0 && state.isProcessing) {
+                    selectThumbnail(state.thumbnails[0].id);
+                }
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                throw error;
+            }
+        }
+
+        // Fungsi untuk merender thumbnail
+        async function renderThumbnail(pdfId, pageNum) {
+            try {
+                const pdfDoc = state.pdfDocs.get(pdfId);
+                const page = await pdfDoc.getPage(pageNum);
+                
+                // Gunakan skala yang lebih kecil untuk thumbnail
+                const viewport = page.getViewport({ scale: 0.3 });
                 
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                canvas.className = 'thumbnail-image';
                 
-                // Set fixed dimensions for all thumbnails
-                canvas.width = this.thumbnailWidth;
-                canvas.height = this.thumbnailHeight;
-                
-                // Clear canvas with white background
-                context.fillStyle = 'white';
-                context.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Calculate position to center the thumbnail
-                const x = (canvas.width - thumbnailViewport.width) / 2;
-                const y = (canvas.height - thumbnailViewport.height) / 2;
-                
-                await page.render({
+                // Render halaman ke canvas
+                const renderContext = {
                     canvasContext: context,
-                    viewport: thumbnailViewport,
-                    transform: [1, 0, 0, 1, x, y]
-                }).promise;
-        
-                const thumbnailIndex = this.thumbnails.length;
-                const thumbnail = {
-                    id: `thumb_${pdfId}_${pageIndex}`,
-                    pdfId: pdfId,
-                    pageIndex: pageIndex,
-                    canvas: canvas,
-                    rotation: 0,
-                    element: this.createThumbnailElement(canvas, thumbnailIndex)
+                    viewport: viewport
                 };
-        
-                this.thumbnails.push(thumbnail);
-                this.thumbnailContainer.appendChild(thumbnail.element);
-            }
-
-            async createThumbnailAfterCurrent(pdfId, pageIndex) {
-                const pdfDoc = this.pdfDocs.get(pdfId);
-                const page = await pdfDoc.getPage(pageIndex + 1);
                 
-                // Calculate scale to fit thumbnail dimensions while maintaining aspect ratio
-                const viewport = page.getViewport({ scale: 1.0 });
-                const aspectRatio = viewport.width / viewport.height;
+                await page.render(renderContext).promise;
                 
-                let scale;
-                if (aspectRatio > (this.thumbnailWidth / this.thumbnailHeight)) {
-                    // Width is the limiting factor
-                    scale = this.thumbnailWidth / viewport.width;
-                } else {
-                    // Height is the limiting factor
-                    scale = this.thumbnailHeight / viewport.height;
-                }
-                
-                const thumbnailViewport = page.getViewport({ scale: scale });
-                
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                
-                // Set fixed dimensions for all thumbnails
-                canvas.width = this.thumbnailWidth;
-                canvas.height = this.thumbnailHeight;
-                
-                // Clear canvas with white background
-                context.fillStyle = 'white';
-                context.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Calculate position to center the thumbnail
-                const x = (canvas.width - thumbnailViewport.width) / 2;
-                const y = (canvas.height - thumbnailViewport.height) / 2;
-                
-                await page.render({
-                    canvasContext: context,
-                    viewport: thumbnailViewport,
-                    transform: [1, 0, 0, 1, x, y]
-                }).promise;
-        
-                const insertPosition = this.currentPage + 1;
                 const thumbnail = {
-                    id: `thumb_${pdfId}_${pageIndex}`,
-                    pdfId: pdfId,
-                    pageIndex: pageIndex,
-                    canvas: canvas,
+                    id: `${pdfId}-page-${pageNum}`,
+                    pdfId,
+                    pageIndex: pageNum - 1,
+                    canvas,
                     rotation: 0,
-                    element: this.createThumbnailElement(canvas, insertPosition)
+                    originalRotation: page.rotate,
+                    originalIsLandscape: viewport.width > viewport.height,
+                    element: null
                 };
-        
-                this.thumbnails.splice(insertPosition, 0, thumbnail);
-                this.updateThumbnailsDisplay();
                 
-                // Tampilkan halaman yang baru ditambahkan
-                this.showPage(insertPosition);
+                state.thumbnails.push(thumbnail);
+                createThumbnailElement(thumbnail);
+                
+                console.log(`Thumbnail untuk halaman ${pageNum} berhasil dibuat`);
+            } catch (error) {
+                console.error('Error rendering thumbnail:', error);
+                throw error;
             }
-        
-            createThumbnailElement(canvas, pageNumber) {
-                const container = document.createElement('div');
-                container.className = 'thumbnail';
-                container.dataset.index = pageNumber;
-                
-                const thumbnailInfo = document.createElement('div');
-                thumbnailInfo.className = 'thumbnail-info';
-                thumbnailInfo.textContent = `Halaman ${pageNumber + 1}`;
-                
-                const controls = document.createElement('div');
-                controls.className = 'thumbnail-controls';
-                
-                // Create buttons with proper event listeners
-                const addBtn = document.createElement('button');
-                addBtn.className = 'thumb-btn thumb-btn-add';
-                addBtn.innerHTML = '+';
-                addBtn.title = 'Tambah halaman setelah ini';
-                addBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.showInsertPdfAfterPage(pageNumber);
-                });
-                
-                const rotateLeftBtn = document.createElement('button');
-                rotateLeftBtn.className = 'thumb-btn';
-                rotateLeftBtn.innerHTML = '↶';
-                rotateLeftBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.rotateThumbnail(pageNumber, -90);
-                });
-                
-                const rotateRightBtn = document.createElement('button');
-                rotateRightBtn.className = 'thumb-btn';
-                rotateRightBtn.innerHTML = '↷';
-                rotateRightBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.rotateThumbnail(pageNumber, 90);
-                });
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'thumb-btn thumb-btn-delete';
-                deleteBtn.innerHTML = '×';
-                deleteBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.deleteThumbnail(pageNumber);
-                });
-                
-                controls.appendChild(addBtn);
-                controls.appendChild(rotateLeftBtn);
-                controls.appendChild(rotateRightBtn);
-                controls.appendChild(deleteBtn);
-                
-                container.appendChild(canvas);
-                container.appendChild(thumbnailInfo);
-                container.appendChild(controls);
-                
-                container.addEventListener('click', (e) => {
-                    if (!e.target.closest('.thumb-btn')) {
-                        this.showPage(pageNumber);
-                    }
-                });
-        
-                return container;
-            }
+        }
 
-            showInsertPdfAfterPage(pageNumber) {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.pdf';
-                input.multiple = true;
-                input.style.display = 'none';
-                
-                // Simpan pageNumber yang dipilih untuk digunakan nanti
-                const targetPage = pageNumber;
-                
-                input.addEventListener('change', (e) => {
-                    // Simpan currentPage sementara
-                    const originalCurrentPage = this.currentPage;
-                    
-                    // Set currentPage ke page yang dipilih
-                    this.currentPage = targetPage;
-                    
-                    // Handle insert PDF setelah currentPage
-                    this.handleInsertPdfAfterCurrent(Array.from(e.target.files));
-                    
-                    // Kembalikan currentPage ke semula
-                    this.currentPage = originalCurrentPage;
-                    
-                    document.body.removeChild(input);
-                });
-                
-                document.body.appendChild(input);
-                input.click();
+        // Fungsi untuk membuat elemen thumbnail
+        function createThumbnailElement(thumbnail) {
+            const thumbnailElement = document.createElement('div');
+            thumbnailElement.className = 'thumbnail';
+            thumbnailElement.setAttribute('data-id', thumbnail.id);
+            
+            // Tambahkan canvas ke thumbnail
+            thumbnailElement.appendChild(thumbnail.canvas);
+            
+            const thumbnailInfo = document.createElement('div');
+            thumbnailInfo.className = 'thumbnail-info';
+            thumbnailInfo.textContent = `Halaman ${state.thumbnails.length}`;
+            
+            const thumbnailControls = document.createElement('div');
+            thumbnailControls.className = 'thumbnail-controls';
+            
+            // Tombol Hapus
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'thumb-btn thumb-btn-delete';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteThumbnail(thumbnail.id);
+            });
+            
+            // Tombol Putar Kiri
+            const rotateLeftBtn = document.createElement('button');
+            rotateLeftBtn.className = 'thumb-btn';
+            rotateLeftBtn.innerHTML = '<i class="fas fa-undo"></i>';
+            rotateLeftBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                rotateThumbnail(thumbnail.id, -90);
+            });
+            
+            // Tombol Putar Kanan
+            const rotateRightBtn = document.createElement('button');
+            rotateRightBtn.className = 'thumb-btn';
+            rotateRightBtn.innerHTML = '<i class="fas fa-redo"></i>';
+            rotateRightBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                rotateThumbnail(thumbnail.id, 90);
+            });
+            
+            // Tombol Tambah Setelah
+            const addAfterBtn = document.createElement('button');
+            addAfterBtn.className = 'thumb-btn thumb-btn-add';
+            addAfterBtn.innerHTML = '<i class="fas fa-plus"></i>';
+            addAfterBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                insertPdfAfterThumbnail(thumbnail.id);
+            });
+            
+            thumbnailControls.appendChild(deleteBtn);
+            thumbnailControls.appendChild(rotateLeftBtn);
+            thumbnailControls.appendChild(rotateRightBtn);
+            thumbnailControls.appendChild(addAfterBtn);
+            
+            thumbnailElement.appendChild(thumbnailInfo);
+            thumbnailElement.appendChild(thumbnailControls);
+            
+            thumbnailElement.addEventListener('click', () => {
+                selectThumbnail(thumbnail.id);
+            });
+            
+            thumbnailContainer.appendChild(thumbnailElement);
+            thumbnail.element = thumbnailElement;
+            
+            // Update nomor halaman untuk semua thumbnail
+            updateThumbnailNumbers();
+        }
+
+        // Fungsi untuk memutar thumbnail tertentu
+        function rotateThumbnail(thumbnailId, degrees) {
+            const thumbnailIndex = state.thumbnails.findIndex(t => t.id === thumbnailId);
+            if (thumbnailIndex === -1) return;
+            
+            const thumbnail = state.thumbnails[thumbnailIndex];
+            thumbnail.rotation = (thumbnail.rotation + degrees) % 360;
+            
+            // Perbarui thumbnail
+            updateThumbnailRotation(thumbnail);
+            
+            // Jika thumbnail ini sedang dipilih, perbarui preview juga
+            if (state.currentPageIndex === thumbnailIndex) {
+                showPreview(thumbnail);
             }
-        
-            showEditSection() {
-                this.uploadCard.style.display = 'none';
-                this.editCard.style.display = 'block';
-                this.actionBar.style.display = 'flex';
-            }
-        
-            backToUpload() {
-                this.editCard.style.display = 'none';
-                this.uploadCard.style.display = 'block';
-                this.actionBar.style.display = 'none';
+            
+            showNotification(`Halaman ${thumbnailIndex + 1} diputar ${degrees > 0 ? 'kanan' : 'kiri'}`, 'success');
+        }
+
+        // Fungsi untuk memilih thumbnail
+        function selectThumbnail(thumbnailId) {
+            // Hapus kelas active dari semua thumbnail
+            document.querySelectorAll('.thumbnail').forEach(thumb => {
+                thumb.classList.remove('active');
+            });
+            
+            // Temukan thumbnail yang dipilih
+            const thumbnailIndex = state.thumbnails.findIndex(t => t.id === thumbnailId);
+            if (thumbnailIndex !== -1) {
+                const thumbnail = state.thumbnails[thumbnailIndex];
                 
-                this.showMessage('Silakan upload PDF baru atau lanjutkan editing.', 'success');
-            }
-        
-            deleteThumbnail(pageNumber) {
-                if (this.thumbnails.length > 1) {
-                    this.thumbnails.splice(pageNumber, 1);
-                    delete this.pageRotations[pageNumber];
-                    
-                    const newPage = Math.min(this.currentPage, this.thumbnails.length - 1);
-                    this.updateThumbnailsDisplay();
-                    
-                    if (this.thumbnails.length > 0) {
-                        this.showPage(newPage);
-                    } else {
-                        this.previewCanvas.style.display = 'none';
-                        this.previewPlaceholder.style.display = 'block';
-                        this.pageInfo.textContent = 'Pilih halaman untuk preview';
-                    }
-                    
-                    this.updatePageCount();
-                } else {
-                    this.showError('Tidak bisa menghapus halaman terakhir');
-                }
-            }
-        
-            initializeSortable() {
-                if (this.sortable) {
-                    this.sortable.destroy();
-                }
-        
-                this.sortable = Sortable.create(this.thumbnailContainer, {
-                    animation: 200,
-                    ghostClass: 'sortable-ghost',
-                    chosenClass: 'sortable-chosen',
-                    dragClass: 'sortable-drag',
-                    handle: '.thumbnail',
-                    onStart: () => {
-                        document.body.style.cursor = 'grabbing';
-                    },
-                    onEnd: (evt) => {
-                        document.body.style.cursor = '';
-                        const oldIndex = evt.oldIndex;
-                        const newIndex = evt.newIndex;
-                        
-                        if (oldIndex !== newIndex) {
-                            // Simpan thumbnail yang dipindahkan
-                            const movedThumbnail = this.thumbnails[oldIndex];
-                            
-                            // Hapus dari posisi lama dan tambahkan ke posisi baru
-                            this.thumbnails.splice(oldIndex, 1);
-                            this.thumbnails.splice(newIndex, 0, movedThumbnail);
-                            
-                            // Update current page
-                            if (this.currentPage === oldIndex) {
-                                this.currentPage = newIndex;
-                            } else if (this.currentPage > oldIndex && this.currentPage <= newIndex) {
-                                this.currentPage--;
-                            } else if (this.currentPage < oldIndex && this.currentPage >= newIndex) {
-                                this.currentPage++;
-                            }
-                            
-                            // Update tampilan thumbnail
-                            this.updateThumbnailsDisplay();
-                            
-                            // Tampilkan halaman yang sedang aktif
-                            this.showPage(this.currentPage);
-                        }
-                    }
-                });
-            }
-        
-            async showPage(pageNumber) {
-                if (pageNumber < 0 || pageNumber >= this.thumbnails.length) return;
+                // Tambahkan kelas active ke thumbnail yang dipilih
+                thumbnail.element.classList.add('active');
                 
-                this.currentPage = pageNumber;
+                // Perbarui state dan tampilkan preview
+                state.currentPageIndex = thumbnailIndex;
+                showPreview(thumbnail);
                 
-                // Update active thumbnail
-                this.thumbnails.forEach((thumb, index) => {
-                    thumb.element.classList.toggle('active', index === pageNumber);
-                });
-        
-                const thumbnail = this.thumbnails[pageNumber];
-                const pdfDoc = this.pdfDocs.get(thumbnail.pdfId);
-                
-                try {
-                    const page = await pdfDoc.getPage(thumbnail.pageIndex + 1);
-                    
-                    // Apply rotation
-                    const rotation = thumbnail.rotation || 0;
-                    const viewport = page.getViewport({ 
-                        scale: 1.0,
-                        rotation: rotation
-                    });
-                    
-                    const context = this.previewCanvas.getContext('2d');
-                    this.previewCanvas.width = viewport.width;
-                    this.previewCanvas.height = viewport.height;
-                    
-                    // Clear canvas
-                    context.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
-                    
-                    this.pageInfo.textContent = `Halaman ${pageNumber + 1} (Rotasi: ${rotation}°)`;
-                    
-                    await page.render({
-                        canvasContext: context,
-                        viewport: viewport
-                    }).promise;
-                    
-                    // Show canvas and hide placeholder
-                    this.previewCanvas.style.display = 'block';
-                    this.previewPlaceholder.style.display = 'none';
-                    
-                    this.enablePreviewControls(true);
-                } catch (error) {
-                    console.error('Error showing page:', error);
-                    this.showError('Gagal menampilkan halaman: ' + error.message);
-                }
+                // Aktifkan tombol kontrol
+                moveUpBtn.disabled = thumbnailIndex === 0;
+                moveDownBtn.disabled = thumbnailIndex === state.thumbnails.length - 1;
+                previewRotateLeft.disabled = false;
+                previewRotateRight.disabled = false;
+                savePdfBtn.disabled = false;
             }
-        
-            rotateThumbnail(pageNumber, degrees) {
-                this.rotatePage(pageNumber, degrees);
-            }
-        
-            rotateCurrentPage(degrees) {
-                this.rotatePage(this.currentPage, degrees);
-            }
-        
-            async rotatePage(pageNumber, degrees) {
-                const thumbnail = this.thumbnails[pageNumber];
-                const currentRotation = thumbnail.rotation || 0;
-                const newRotation = (currentRotation + degrees + 360) % 360;
-                
-                thumbnail.rotation = newRotation;
-                this.pageRotations[pageNumber] = newRotation;
-                
-                // Update thumbnail preview dengan rotasi
-                const pdfDoc = this.pdfDocs.get(thumbnail.pdfId);
+        }
+
+        // Fungsi untuk menampilkan preview
+        async function showPreview(thumbnail) {
+            try {
+                const pdfDoc = state.pdfDocs.get(thumbnail.pdfId);
                 const page = await pdfDoc.getPage(thumbnail.pageIndex + 1);
                 
-                // Calculate scale untuk thumbnail dengan rotasi
-                const viewport = page.getViewport({ scale: 1.0, rotation: newRotation });
-                const aspectRatio = viewport.width / viewport.height;
+                // Hitung skala untuk menyesuaikan dengan container preview
+                const viewport = page.getViewport({ scale: 1.5 });
+                const rotation = (thumbnail.rotation + thumbnail.originalRotation) % 360;
                 
-                let scale;
-                if (aspectRatio > (this.thumbnailWidth / this.thumbnailHeight)) {
-                    scale = this.thumbnailWidth / viewport.width;
-                } else {
-                    scale = this.thumbnailHeight / viewport.height;
-                }
+                // Sesuaikan viewport berdasarkan rotasi
+                const rotatedViewport = page.getViewport({ 
+                    scale: 1.5, 
+                    rotation: rotation 
+                });
                 
-                const thumbnailViewport = page.getViewport({ scale: scale, rotation: newRotation });
+                previewCanvas.width = rotatedViewport.width;
+                previewCanvas.height = rotatedViewport.height;
                 
-                const canvas = thumbnail.element.querySelector('canvas');
-                const context = canvas.getContext('2d');
-                
-                // Clear canvas
-                context.fillStyle = 'white';
-                context.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Calculate position to center the thumbnail
-                const x = (canvas.width - thumbnailViewport.width) / 2;
-                const y = (canvas.height - thumbnailViewport.height) / 2;
+                const context = previewCanvas.getContext('2d');
                 
                 await page.render({
                     canvasContext: context,
-                    viewport: thumbnailViewport,
-                    transform: [1, 0, 0, 1, x, y]
+                    viewport: rotatedViewport
                 }).promise;
                 
-                // Update main preview jika halaman ini sedang dilihat
-                if (pageNumber === this.currentPage) {
-                    this.showPage(pageNumber);
-                }
-            }
-        
-            movePageUp() {
-                if (this.currentPage > 0) {
-                    this.swapPages(this.currentPage, this.currentPage - 1);
-                    this.showPage(this.currentPage - 1);
-                }
-            }
-        
-            movePageDown() {
-                if (this.currentPage < this.thumbnails.length - 1) {
-                    this.swapPages(this.currentPage, this.currentPage + 1);
-                    this.showPage(this.currentPage + 1);
-                }
-            }
-        
-            swapPages(index1, index2) {
-                [this.thumbnails[index1], this.thumbnails[index2]] = 
-                [this.thumbnails[index2], this.thumbnails[index1]];
+                // Perbarui informasi halaman
+                pageInfo.textContent = `Halaman ${state.currentPageIndex + 1} dari ${state.thumbnails.length}`;
                 
-                // Update rotations
-                const tempRotation = this.thumbnails[index1].rotation;
-                this.thumbnails[index1].rotation = this.thumbnails[index2].rotation;
-                this.thumbnails[index2].rotation = tempRotation;
-                
-                this.updateThumbnailsDisplay();
+                // Tampilkan canvas dan sembunyikan placeholder
+                previewPlaceholder.style.display = 'none';
+                previewCanvas.style.display = 'block';
+            } catch (error) {
+                console.error('Error showing preview:', error);
+                showNotification('Gagal menampilkan pratinjau', 'error');
             }
-        
-            updateThumbnailsDisplay() {
-                // Kosongkan container
-                this.thumbnailContainer.innerHTML = '';
-                
-                // Tambahkan semua thumbnail dengan urutan yang benar
-                this.thumbnails.forEach((thumb, index) => {
-                    // Buat elemen baru untuk menghindari masalah event listeners
-                    const newElement = this.createThumbnailElement(thumb.canvas, index);
-                    thumb.element = newElement;
-                    
-                    // Set active state jika ini adalah current page
-                    if (index === this.currentPage) {
-                        newElement.classList.add('active');
-                    }
-                    
-                    this.thumbnailContainer.appendChild(newElement);
-                });
-                
-                // Re-initialize sortable
-                this.initializeSortable();
+        }
+
+        // Fungsi untuk memutar halaman
+        function rotatePage(degrees) {
+            if (state.thumbnails.length === 0) return;
+            
+            const thumbnail = state.thumbnails[state.currentPageIndex];
+            thumbnail.rotation = (thumbnail.rotation + degrees) % 360;
+            
+            // Perbarui preview
+            showPreview(thumbnail);
+            
+            // Perbarui thumbnail
+            updateThumbnailRotation(thumbnail);
+            
+            showNotification(`Halaman diputar ${degrees > 0 ? 'kanan' : 'kiri'}`, 'success');
+        }
+
+        // Fungsi untuk memperbarui rotasi thumbnail
+        function updateThumbnailRotation(thumbnail) {
+            const canvas = thumbnail.element.querySelector('canvas');
+            if (canvas) {
+                canvas.style.transform = `rotate(${thumbnail.rotation}deg)`;
             }
-        
-            updatePageCount() {
-                this.pageCount.textContent = `${this.thumbnails.length} halaman`;
-                this.savePdf.disabled = this.thumbnails.length === 0;
+        }
+
+        // Fungsi untuk memindahkan halaman ke atas
+        function movePageUp() {
+            if (state.currentPageIndex <= 0) return;
+            
+            const currentIndex = state.currentPageIndex;
+            const thumbnail = state.thumbnails[currentIndex];
+            
+            // Tukar posisi dalam array
+            state.thumbnails.splice(currentIndex, 1);
+            state.thumbnails.splice(currentIndex - 1, 0, thumbnail);
+            
+            // Perbarui UI
+            updateThumbnailGrid();
+            
+            // Perbarui indeks halaman saat ini
+            state.currentPageIndex = currentIndex - 1;
+            
+            // Pilih thumbnail yang baru dipindahkan
+            selectThumbnail(thumbnail.id);
+            
+            showNotification('Halaman dipindahkan ke atas', 'success');
+        }
+
+        // Fungsi untuk memindahkan halaman ke bawah
+        function movePageDown() {
+            if (state.currentPageIndex >= state.thumbnails.length - 1) return;
+            
+            const currentIndex = state.currentPageIndex;
+            const thumbnail = state.thumbnails[currentIndex];
+            
+            // Tukar posisi dalam array
+            state.thumbnails.splice(currentIndex, 1);
+            state.thumbnails.splice(currentIndex + 1, 0, thumbnail);
+            
+            // Perbarui UI
+            updateThumbnailGrid();
+            
+            // Perbarui indeks halaman saat ini
+            state.currentPageIndex = currentIndex + 1;
+            
+            // Pilih thumbnail yang baru dipindahkan
+            selectThumbnail(thumbnail.id);
+            
+            showNotification('Halaman dipindahkan ke bawah', 'success');
+        }
+
+        // Fungsi untuk menghapus thumbnail
+        function deleteThumbnail(thumbnailId) {
+            const thumbnailIndex = state.thumbnails.findIndex(t => t.id === thumbnailId);
+            if (thumbnailIndex === -1) return;
+            
+            // Hapus dari array
+            state.thumbnails.splice(thumbnailIndex, 1);
+            
+            // Hapus elemen dari DOM
+            const thumbnailElement = document.querySelector(`[data-id="${thumbnailId}"]`);
+            if (thumbnailElement) {
+                thumbnailElement.remove();
             }
-        
-            async saveRearrangedPdf() {
-                if (this.isProcessing || this.thumbnails.length === 0) return;
+            
+            // Perbarui nomor halaman
+            updateThumbnailNumbers();
+            
+            // Atur ulang currentPageIndex jika perlu
+            if (state.currentPageIndex >= state.thumbnails.length) {
+                state.currentPageIndex = Math.max(0, state.thumbnails.length - 1);
+            }
+            
+            // Tampilkan preview halaman baru jika ada
+            if (state.thumbnails.length > 0) {
+                selectThumbnail(state.thumbnails[state.currentPageIndex].id);
+            } else {
+                // Sembunyikan preview dan kembali ke upload
+                backToUpload();
+            }
+            
+            // Perbarui jumlah halaman
+            updatePageCount();
+            
+            showNotification('Halaman dihapus', 'success');
+        }
+
+        // Fungsi untuk menyisipkan PDF setelah thumbnail tertentu
+        function insertPdfAfterThumbnail(thumbnailId) {
+            // Temukan indeks thumbnail
+            const thumbnailIndex = state.thumbnails.findIndex(t => t.id === thumbnailId);
+            if (thumbnailIndex === -1) return;
+            
+            // Simpan indeks untuk penyisipan
+            state.currentPageIndex = thumbnailIndex;
+            
+            // Panggil fungsi insert
+            insertPdfAfterCurrent();
+        }
+
+        // Fungsi untuk menyisipkan PDF setelah halaman saat ini
+        function insertPdfAfterCurrent() {
+            // Buat input file sementara
+            const tempInput = document.createElement('input');
+            tempInput.type = 'file';
+            tempInput.accept = '.pdf';
+            tempInput.multiple = true;
+            
+            tempInput.addEventListener('change', async (e) => {
+                const files = Array.from(e.target.files).filter(file => file.type === 'application/pdf');
                 
-                this.isProcessing = true;
-                this.showLoading(true);
-        
-                try {
-                    const { PDFDocument, degrees } = PDFLib;
-                    const newPdfDoc = await PDFDocument.create();
-                    
-                    for (let i = 0; i < this.thumbnails.length; i++) {
-                        const thumb = this.thumbnails[i];
-                        const originalFile = this.originalFiles.get(thumb.pdfId);
-                        const arrayBuffer = await originalFile.arrayBuffer();
-                        const originalPdfDoc = await PDFDocument.load(arrayBuffer);
+                if (files.length > 0) {
+                    try {
+                        showLoading('Menambahkan PDF...');
                         
-                        const [copiedPage] = await newPdfDoc.copyPages(originalPdfDoc, [thumb.pageIndex]);
-                        
-                        // Apply rotation saja, pertahankan ukuran original
-                        if (thumb.rotation) {
-                            const rotationAngle = this.getPdfLibRotation(thumb.rotation);
-                            copiedPage.setRotation(rotationAngle);
+                        for (const file of files) {
+                            if (!state.isProcessing) break;
+                            await loadPdfAfterCurrent(file);
                         }
                         
-                        newPdfDoc.addPage(copiedPage);
+                        if (state.isProcessing) {
+                            hideLoading();
+                            showNotification(`Berhasil menambahkan ${files.length} file PDF`, 'success');
+                            
+                            // Perbarui jumlah halaman
+                            updatePageCount();
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error inserting PDF files:', error);
+                        showNotification('Gagal menambahkan file PDF', 'error');
+                        hideLoading();
                     }
-                    
-                    const pdfBytes = await newPdfDoc.save();
-                    this.downloadPdf(pdfBytes);
-                    this.showMessage('PDF berhasil disimpan dengan ukuran original!', 'success');
-                    
-                } catch (error) {
-                    console.error('Error saving PDF:', error);
-                    this.showError('Error menyimpan PDF: ' + error.message);
-                } finally {
-                    this.isProcessing = false;
-                    this.showLoading(false);
                 }
+            });
+            
+            tempInput.click();
+        }
+
+        // Fungsi untuk memuat PDF setelah halaman saat ini
+        async function loadPdfAfterCurrent(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const pdfId = `pdf-${state.nextPdfId++}`;
+            
+            state.pdfDocs.set(pdfId, pdfDoc);
+            state.originalFiles.set(pdfId, file);
+            
+            // Render semua halaman sebagai thumbnail dan sisipkan setelah halaman saat ini
+            const insertIndex = state.currentPageIndex + 1;
+            
+            for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+                if (!state.isProcessing) break;
+                
+                updateProgress(
+                    (pageNum / pdfDoc.numPages) * 100,
+                    `Menambahkan halaman ${pageNum} dari ${pdfDoc.numPages}`
+                );
+                
+                await renderThumbnailAtPosition(pdfId, pageNum, insertIndex + (pageNum - 1));
             }
-        
-            getPdfLibRotation(rotation) {
-                const { degrees } = PDFLib;
-                switch (rotation) {
-                    case 90: return degrees(90);
-                    case 180: return degrees(180);
-                    case 270: return degrees(270);
-                    default: return degrees(0);
+            
+            // Perbarui UI
+            updateThumbnailGrid();
+        }
+
+        // Fungsi untuk merender thumbnail pada posisi tertentu
+        async function renderThumbnailAtPosition(pdfId, pageNum, position) {
+            const pdfDoc = state.pdfDocs.get(pdfId);
+            const page = await pdfDoc.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 0.3 });
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            canvas.className = 'thumbnail-image';
+            
+            await page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise;
+            
+            const thumbnail = {
+                id: `${pdfId}-page-${pageNum}`,
+                pdfId,
+                pageIndex: pageNum - 1,
+                canvas,
+                rotation: 0,
+                originalRotation: page.rotate,
+                originalIsLandscape: viewport.width > viewport.height,
+                element: null
+            };
+            
+            // Sisipkan pada posisi yang ditentukan
+            state.thumbnails.splice(position, 0, thumbnail);
+            createThumbnailElementAtPosition(thumbnail, position);
+        }
+
+        // Fungsi untuk membuat elemen thumbnail pada posisi tertentu
+        function createThumbnailElementAtPosition(thumbnail, position) {
+            const thumbnailElement = document.createElement('div');
+            thumbnailElement.className = 'thumbnail';
+            thumbnailElement.setAttribute('data-id', thumbnail.id);
+            
+            // Tambahkan canvas ke thumbnail
+            thumbnailElement.appendChild(thumbnail.canvas);
+            
+            const thumbnailInfo = document.createElement('div');
+            thumbnailInfo.className = 'thumbnail-info';
+            thumbnailInfo.textContent = `Halaman ${position + 1}`;
+            
+            const thumbnailControls = document.createElement('div');
+            thumbnailControls.className = 'thumbnail-controls';
+            
+            // Tombol Hapus
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'thumb-btn thumb-btn-delete';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteThumbnail(thumbnail.id);
+            });
+            
+            // Tombol Putar Kiri
+            const rotateLeftBtn = document.createElement('button');
+            rotateLeftBtn.className = 'thumb-btn';
+            rotateLeftBtn.innerHTML = '<i class="fas fa-undo"></i>';
+            rotateLeftBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                rotateThumbnail(thumbnail.id, -90);
+            });
+            
+            // Tombol Putar Kanan
+            const rotateRightBtn = document.createElement('button');
+            rotateRightBtn.className = 'thumb-btn';
+            rotateRightBtn.innerHTML = '<i class="fas fa-redo"></i>';
+            rotateRightBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                rotateThumbnail(thumbnail.id, 90);
+            });
+            
+            // Tombol Tambah Setelah
+            const addAfterBtn = document.createElement('button');
+            addAfterBtn.className = 'thumb-btn thumb-btn-add';
+            addAfterBtn.innerHTML = '<i class="fas fa-plus"></i>';
+            addAfterBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                insertPdfAfterThumbnail(thumbnail.id);
+            });
+            
+            thumbnailControls.appendChild(deleteBtn);
+            thumbnailControls.appendChild(rotateLeftBtn);
+            thumbnailControls.appendChild(rotateRightBtn);
+            thumbnailControls.appendChild(addAfterBtn);
+            
+            thumbnailElement.appendChild(thumbnailInfo);
+            thumbnailElement.appendChild(thumbnailControls);
+            
+            thumbnailElement.addEventListener('click', () => {
+                selectThumbnail(thumbnail.id);
+            });
+            
+            // Sisipkan elemen pada posisi yang benar
+            const existingThumbnails = thumbnailContainer.querySelectorAll('.thumbnail');
+            if (position < existingThumbnails.length) {
+                thumbnailContainer.insertBefore(thumbnailElement, existingThumbnails[position]);
+            } else {
+                thumbnailContainer.appendChild(thumbnailElement);
+            }
+            
+            thumbnail.element = thumbnailElement;
+            
+            // Perbarui nomor halaman untuk semua thumbnail
+            updateThumbnailNumbers();
+        }
+
+        // Fungsi untuk memperbarui grid thumbnail
+        function updateThumbnailGrid() {
+            // Hapus semua thumbnail dari DOM
+            while (thumbnailContainer.firstChild) {
+                thumbnailContainer.removeChild(thumbnailContainer.firstChild);
+            }
+            
+            // Tambahkan kembali semua thumbnail dalam urutan yang benar
+            state.thumbnails.forEach(thumbnail => {
+                thumbnailContainer.appendChild(thumbnail.element);
+            });
+            
+            // Perbarui nomor halaman
+            updateThumbnailNumbers();
+        }
+
+        // Fungsi untuk memperbarui nomor halaman pada thumbnail
+        function updateThumbnailNumbers() {
+            state.thumbnails.forEach((thumbnail, index) => {
+                const pageNumberElement = thumbnail.element.querySelector('.thumbnail-info');
+                if (pageNumberElement) {
+                    pageNumberElement.textContent = `Halaman ${index + 1}`;
                 }
+            });
+        }
+
+        // Fungsi untuk inisialisasi sortable (drag and drop)
+        function initSortable() {
+            Sortable.create(thumbnailContainer, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                onEnd: function(evt) {
+                    const oldIndex = evt.oldIndex;
+                    const newIndex = evt.newIndex;
+                    
+                    if (oldIndex !== newIndex) {
+                        // Pindahkan thumbnail dalam array state
+                        const [movedThumbnail] = state.thumbnails.splice(oldIndex, 1);
+                        state.thumbnails.splice(newIndex, 0, movedThumbnail);
+                        
+                        // Perbarui currentPageIndex jika perlu
+                        if (state.currentPageIndex === oldIndex) {
+                            state.currentPageIndex = newIndex;
+                        } else if (state.currentPageIndex > oldIndex && state.currentPageIndex <= newIndex) {
+                            state.currentPageIndex--;
+                        } else if (state.currentPageIndex < oldIndex && state.currentPageIndex >= newIndex) {
+                            state.currentPageIndex++;
+                        }
+                        
+                        // Perbarui nomor halaman
+                        updateThumbnailNumbers();
+                        
+                        showNotification('Urutan halaman diperbarui', 'success');
+                    }
+                }
+            });
+        }
+
+        // Fungsi untuk menyimpan PDF
+        async function savePdfFile() {
+            if (state.thumbnails.length === 0) {
+                showNotification('Tidak ada halaman untuk disimpan', 'warning');
+                return;
             }
-        
-            downloadPdf(pdfBytes) {
+            
+            try {
+                showLoading('Menyimpan PDF...');
+                
+                // Buat PDF baru
+                const pdfDoc = await PDFLib.PDFDocument.create();
+                
+                let processedPages = 0;
+                const totalPages = state.thumbnails.length;
+                
+                // Salin halaman dari PDF asli dengan rotasi yang diterapkan
+                for (const thumbnail of state.thumbnails) {
+                    if (!state.isProcessing) break;
+                    
+                    processedPages++;
+                    updateProgress(
+                        (processedPages / totalPages) * 100,
+                        `Memproses halaman ${processedPages} dari ${totalPages}`
+                    );
+                    
+                    const originalPdfBytes = await state.originalFiles.get(thumbnail.pdfId).arrayBuffer();
+                    const sourcePdfDoc = await PDFLib.PDFDocument.load(originalPdfBytes);
+                    
+                    const [sourcePage] = await pdfDoc.copyPages(sourcePdfDoc, [thumbnail.pageIndex]);
+                    
+                    // Terapkan rotasi
+                    sourcePage.setRotation(PDFLib.degrees(thumbnail.rotation + thumbnail.originalRotation));
+                    
+                    pdfDoc.addPage(sourcePage);
+                    
+                    // Beri waktu untuk browser bernapas setiap 10 halaman
+                    if (processedPages % 10 === 0) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+                
+                if (!state.isProcessing) {
+                    hideLoading();
+                    return;
+                }
+                
+                updateProgress(95, 'Menyimpan dokumen...');
+                
+                // Simpan PDF
+                const pdfBytes = await pdfDoc.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                
+                // Check blob size untuk file besar
+                if (blob.size > 100 * 1024 * 1024) {
+                    showNotification('File hasil sangat besar, download mungkin lambat', 'warning');
+                }
+                
                 const url = URL.createObjectURL(blob);
+                
+                // Buat link download
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'pdf-pagemaster-rearranged.pdf';
+                a.download = 'edited-document.pdf';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-        
-            enableControls(enabled) {
-                this.moveUp.disabled = !enabled;
-                this.moveDown.disabled = !enabled;
-                this.savePdf.disabled = !enabled || this.thumbnails.length === 0;
-                this.addPageAfterPreview.disabled = !enabled;
-            }
-        
-            enablePreviewControls(enabled) {
-                this.previewRotateLeft.disabled = !enabled;
-                this.previewRotateRight.disabled = !enabled;
-                this.addPageAfterPreview.disabled = !enabled;
-            }
-        
-            showLoading(show) {
-                this.loading.style.display = show ? 'block' : 'none';
-            }
-        
-            showError(message) {
-                this.errorMessage.textContent = message;
-                this.errorNotification.style.display = 'flex';
-                this.successNotification.style.display = 'none';
-            }
-        
-            showMessage(message, type = 'success') {
-                if (type === 'success') {
-                    this.successMessage.textContent = message;
-                    this.successNotification.style.display = 'flex';
-                    this.errorNotification.style.display = 'none';
+                
+                // Bersihkan URL
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+                
+                updateProgress(100, 'Selesai!');
+                setTimeout(() => {
+                    hideLoading();
+                    showNotification('PDF berhasil disimpan', 'success');
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error saving PDF:', error);
+                
+                if (error.message.includes('memory') || error.message.includes('Array buffer allocation failed')) {
+                    showNotification('File terlalu besar. Coba hapus beberapa halaman atau gunakan file yang lebih kecil.', 'error');
+                } else if (error.message.includes('timeout') || error.name === 'TimeoutError') {
+                    showNotification('Proses terlalu lama. Coba dengan file yang lebih kecil.', 'error');
                 } else {
-                    this.showError(message);
+                    showNotification('Gagal menyimpan PDF: ' + error.message, 'error');
                 }
-            }
-        
-            hideMessages() {
-                this.errorNotification.style.display = 'none';
-                this.successNotification.style.display = 'none';
+                
+                hideLoading();
             }
         }
-        
-        // Initialize application
-        let app;
-        document.addEventListener('DOMContentLoaded', () => {
-            app = new PDFPageMaster();
-        });
+
+        // Fungsi untuk kembali ke halaman upload
+        function backToUpload() {
+            // Reset state
+            state.pdfDocs.clear();
+            state.thumbnails = [];
+            state.currentPageIndex = 0;
+            state.pageRotations = {};
+            state.originalFiles.clear();
+            state.nextPdfId = 1;
+            state.isProcessing = false;
+            
+            // Reset UI
+            thumbnailContainer.innerHTML = '';
+            previewPlaceholder.style.display = 'block';
+            previewCanvas.style.display = 'none';
+            pageInfo.textContent = 'Pilih halaman untuk melihat pratinjau';
+            editCard.style.display = 'none';
+            actionBar.style.display = 'none';
+            uploadCard.style.display = 'block';
+            
+            // Nonaktifkan tombol
+            moveUpBtn.disabled = true;
+            moveDownBtn.disabled = true;
+            previewRotateLeft.disabled = true;
+            previewRotateRight.disabled = true;
+            savePdfBtn.disabled = true;
+            
+            showNotification('Kembali ke halaman upload', 'success');
+        }
+
+        // Fungsi untuk memperbarui jumlah halaman
+        function updatePageCount() {
+            pageCount.textContent = `${state.thumbnails.length} halaman`;
+        }
+
+        // Fungsi untuk menampilkan notifikasi
+        function showNotification(message, type) {
+            if (type === 'error') {
+                errorMessage.textContent = message;
+                errorNotification.style.display = 'flex';
+                setTimeout(() => {
+                    errorNotification.style.display = 'none';
+                }, 5000);
+            } else {
+                successMessage.textContent = message;
+                successNotification.style.display = 'flex';
+                setTimeout(() => {
+                    successNotification.style.display = 'none';
+                }, 3000);
+            }
+        }
     </script>
 </body>
 </html>
