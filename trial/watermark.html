@@ -27,6 +27,10 @@
             --border-radius: 12px;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius-lg: 16px;
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --text-secondary: #6c757d;
+            --border: #e2e8f0;
         }
 
         * {
@@ -47,27 +51,6 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-        }
-
-        /* App Header */
-        .app-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px 0;
-        }
-
-        .app-header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
-            font-weight: 700;
-            color: var(--dark);
-        }
-
-        .app-header p {
-            font-size: 1.1rem;
-            color: var(--gray);
-            max-width: 600px;
-            margin: 0 auto;
         }
 
         /* Main Layout */
@@ -198,12 +181,22 @@
             background: #dc2626;
         }
 
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-light);
+        }
+
 
         /* File List */
         .file-list {
-            max-height: 300px;
+            max-height: 310px;
             overflow-y: auto;
-            margin-bottom: 15px;
+            margin-bottom: 25px;
         }
 
         .file-item {
@@ -519,16 +512,80 @@
         .hidden {
             display: none;
         }
+
+        /* Loading Bar Styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 40px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .loading-progress-container {
+            width: 100%;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            height: 12px;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .loading-progress-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .loading-progress-details {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(94, 53, 177, 0.2);
+            border-left: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- App Header -->
-        <section class="app-header">
-            <h1>AquaMark - Watermark PDF</h1>
-            <p>Tambahkan watermark profesional ke file PDF Anda dengan mudah</p>
-        </section>
-
         <!-- Upload Section -->
         <div class="card" id="uploadSection">
             <div class="card-body">
@@ -682,6 +739,22 @@
         <div class="message success" id="successMessage"></div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3 id="loadingTitle">Memproses PDF</h3>
+            <div class="loading-progress-text" id="loadingProgressText">0%</div>
+            <div class="loading-progress-container">
+                <div class="loading-progress-bar" id="loadingProgressBar"></div>
+            </div>
+            <div class="loading-progress-details" id="loadingProgressDetails">Mempersiapkan...</div>
+            <button class="btn btn-outline" id="cancelBtn" style="margin-top: 20px;">
+                <i class="fas fa-times"></i> Batalkan
+            </button>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer>
         <p>© 2025 <b>AquaMark</b> | Dikembangkan oleh <a href="https://instagram.com/tatangaditya">Tatang Aditya</a></p>
@@ -727,6 +800,14 @@ const landscapePlaceholder = document.getElementById('landscapePlaceholder');
 const portraitOption = document.getElementById('portraitOption');
 const landscapeOption = document.getElementById('landscapeOption');
 
+// Elemen DOM untuk loading
+const loadingOverlay = document.getElementById('loadingOverlay');
+const loadingTitle = document.getElementById('loadingTitle');
+const loadingProgressText = document.getElementById('loadingProgressText');
+const loadingProgressBar = document.getElementById('loadingProgressBar');
+const loadingProgressDetails = document.getElementById('loadingProgressDetails');
+const cancelBtn = document.getElementById('cancelBtn');
+
 // Data aplikasi
 let files = [];
 let processedFiles = [];
@@ -737,6 +818,9 @@ let watermarkImages = {
 let currentPreviewFile = null;
 let currentPreviewPage = 1;
 let currentPreviewTotalPages = 1;
+let state = {
+    isProcessing: false
+};
 
 // Konstanta ukuran F4 dalam mm
 const F4_PORTRAIT = [210, 330];
@@ -759,6 +843,7 @@ prevPageBtn.addEventListener('click', () => changePreviewPage(-1));
 nextPageBtn.addEventListener('click', () => changePreviewPage(1));
 pageInput.addEventListener('change', () => goToPreviewPage(parseInt(pageInput.value)));
 closePreviewBtn.addEventListener('click', closePreview);
+cancelBtn.addEventListener('click', cancelProcessing);
 
 // Tambahkan event listeners untuk menghapus watermark
 portraitOption.addEventListener('dblclick', function() {
@@ -776,6 +861,57 @@ document.addEventListener('DOMContentLoaded', function() {
     previewPlaceholder.style.display = 'flex';
     previewCanvas.style.display = 'none';
 });
+
+// Fungsi untuk menampilkan loading dengan progress
+function showLoading(title = 'Memproses PDF') {
+    loadingTitle.textContent = title;
+    loadingProgressText.textContent = '0%';
+    loadingProgressBar.style.width = '0%';
+    loadingProgressDetails.textContent = 'Mempersiapkan...';
+    loadingOverlay.style.display = 'flex';
+    state.isProcessing = true;
+}
+
+// Fungsi untuk memperbarui progress
+function updateProgress(percent, details = '') {
+    const roundedPercent = Math.round(percent);
+    loadingProgressText.textContent = `${roundedPercent}%`;
+    loadingProgressBar.style.width = `${roundedPercent}%`;
+    if (details) {
+        loadingProgressDetails.textContent = details;
+    }
+}
+
+// Fungsi untuk menyembunyikan loading
+function hideLoading() {
+    loadingOverlay.style.display = 'none';
+    state.isProcessing = false;
+}
+
+// Fungsi untuk membatalkan proses
+function cancelProcessing() {
+    state.isProcessing = false;
+    hideLoading();
+    showNotification('Proses dibatalkan', 'warning');
+}
+
+// Fungsi untuk menampilkan notifikasi
+function showNotification(message, type = 'info') {
+    // Buat elemen notifikasi sementara
+    const notification = document.createElement('div');
+    notification.className = `message ${type === 'error' ? 'error' : type === 'warning' ? 'error' : 'success'}`;
+    notification.textContent = message;
+    notification.style.display = 'block';
+    
+    // Tambahkan ke container
+    const container = document.querySelector('.container');
+    container.appendChild(notification);
+    
+    // Hapus setelah 3 detik
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
 
 // Fungsi untuk handle upload watermark
 function handleWatermarkUpload(event, type) {
@@ -1242,14 +1378,17 @@ async function processFiles() {
     processBtn.disabled = true;
     processedFiles = [];
     
-    progressContainer.style.display = 'block';
-    progressFill.style.width = '0%';
-    progressText.textContent = 'Memulai proses...';
+    // Tampilkan loading overlay
+    showLoading('Memproses PDF');
     
     try {
         for (let i = 0; i < files.length; i++) {
+            if (!state.isProcessing) {
+                break; // Proses dibatalkan
+            }
+            
             const file = files[i];
-            progressText.textContent = `Memproses ${file.name} (${i+1}/${files.length})`;
+            updateProgress((i / files.length) * 100, `Memproses ${file.name} (${i+1}/${files.length})`);
             
             const watermarkedPdf = await processPdfFile(file);
             processedFiles.push({
@@ -1258,32 +1397,30 @@ async function processFiles() {
             });
             
             const progress = ((i + 1) / files.length) * 100;
-            progressFill.style.width = `${progress}%`;
-            progressPercent.textContent = `${Math.round(progress)}%`;
+            updateProgress(progress, `Menyelesaikan ${file.name} (${i+1}/${files.length})`);
             
             await new Promise(resolve => setTimeout(resolve, 100));
         }
         
-        progressText.textContent = 'Menyiapkan download...';
-        
-        if (files.length <= 3) {
-            downloadAllFiles();
-        } else {
-            await downloadAsZip();
+        if (state.isProcessing) {
+            updateProgress(100, 'Menyiapkan download...');
+            
+            if (files.length <= 3) {
+                downloadAllFiles();
+            } else {
+                await downloadAsZip();
+            }
+            
+            hideLoading();
+            showSuccess(`Berhasil memproses ${processedFiles.length} file PDF`);
         }
-        
-        progressText.textContent = 'Selesai!';
-        showSuccess(`Berhasil memproses ${processedFiles.length} file PDF`);
         
     } catch (error) {
         console.error('Error processing files:', error);
+        hideLoading();
         showError(`Error: ${error.message}`);
     } finally {
-        setTimeout(() => {
-            progressContainer.style.display = 'none';
-            progressFill.style.width = '0%';
-            processBtn.disabled = false;
-        }, 3000);
+        processBtn.disabled = false;
     }
 }
 
