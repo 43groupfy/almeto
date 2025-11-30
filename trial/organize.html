@@ -57,60 +57,13 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 24px;
+            padding: 44px;
         }
 
-        .card {
+        #uploadCard {
             background: var(--surface);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: 32px;
-            margin-bottom: 32px;
-            transition: var(--transition);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-        }
-
-        .card:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-2px);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .card-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
             box-shadow: var(--shadow-sm);
-        }
-
-        .card-icon i {
-            font-size: 1.4rem;
-            color: var(--text-light);
-        }
-
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .card-description {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            margin-top: 4px;
+            border-radius: var(--radius-lg);
         }
 
         .upload-area {
@@ -598,6 +551,14 @@
             .card {
                 padding: 24px;
             }
+
+            #uploadCard, #actionBar{
+                margin: 0 24px;
+            } 
+            
+            #errorNotification, #successNotification {
+                margin: 0 24px 20px;
+            }
             
             .controls {
                 justify-content: center;
@@ -716,15 +677,6 @@
 
         <!-- Upload PDF Section -->
         <div class="card" id="uploadCard">
-            <div class="card-header">
-                <div class="card-icon">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                </div>
-                <div>
-                    <h2 class="card-title">Unggah PDF</h2>
-                    <p class="card-description">Mulai dengan mengunggah file PDF yang ingin Anda atur</p>
-                </div>
-            </div>
             <div class="upload-area" id="dropZone">
                 <div class="upload-icon">
                     <i class="fas fa-file-pdf"></i>
@@ -739,17 +691,7 @@
         </div>
 
         <!-- Edit & Rearrange Section -->
-        <div class="card" id="editCard" style="display: none;">
-            <div class="card-header">
-                <div class="card-icon">
-                    <i class="fas fa-edit"></i>
-                </div>
-                <div>
-                    <h2 class="card-title">Edit & Atur Ulang PDF</h2>
-                    <p class="card-description">Atur urutan halaman dan lakukan penyesuaian yang diperlukan</p>
-                </div>
-            </div>
-
+        <div class="card" id="editCard" style="display: nojne;">
             <div class="workspace">
                 <div class="thumbnail-panel">
                     <h3 class="card-title"><i class="fas fa-th-list"></i> Daftar Halaman</h3>
