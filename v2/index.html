@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Toolkit | Alat Pengolah PDF Online</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --secondary: #7c3aed;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+            --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --gradient-primary: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --gradient-accent: linear-gradient(135deg, #06b6d4 0%, #4f46e5 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(79, 70, 229, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(124, 58, 237, 0.08) 0%, transparent 50%);
+        }
+        
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        #fitur{
+            padding-top: 50px;
+        }
+        
+        /* Header & Navigation */
+        header {
+            padding: 24px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 1.7rem;
+            color: var(--dark);
+            text-decoration: none;
+            transition: var(--transition-fast);
+        }
+        
+        .logo:hover {
+            transform: translateY(-2px);
+        }
+        
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--gradient-primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        
+        .logo-text {
+            background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: var(--gray);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition-fast);
+            position: relative;
+            padding: 8px 0;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary);
+        }
+        
+        .nav-link.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: 3px;
+        }
+        
+        .cta-button {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 20px 42px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: var(--transition-fast);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+        }
+        
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            max-width: 800px;
+            margin: 80px auto 135px;
+        }
+        
+        .hero h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1.1;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hide {
+            display: none;
+        }
+        
+        .hero p {
+            font-size: 1.15rem;
+            color: var(--gray);
+            max-width: 650px;
+            margin: 0 auto 50px;
+        }
+        
+        /* Stats */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: -10px 0 -15px;
+
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+            font-weight: 500;
+        }
+        
+        /* Cards Container */
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 70px;
+            perspective: 1000px;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px 32px;
+            width: 100%;
+            max-width: 360px;
+            transition: var(--transition-smooth);
+            text-align: left;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center; /* vertikal center */
+            justify-content: space-between; /* icon kiri, badge kanan */
+            gap: 10px
+        }
+
+        .card-1::before {
+            background: linear-gradient(90deg, #4f46e5, #6366f1);
+        }
+        
+        .card-2::before {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+        
+        .card-3::before {
+            background: linear-gradient(90deg, #06b6d4, #0ea5e9);
+        }
+        
+        .card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: var(--shadow-xl);
+            border-color: rgba(79, 70, 229, 0.3);
+        }
+        
+        .card-icon-wrapper {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 28px;
+            font-size: 2.2rem;
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-1 .card-icon-wrapper {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(79, 70, 229, 0.2) 100%);
+            color: var(--primary);
+        }
+        
+        .card-2 .card-icon-wrapper {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.2) 100%);
+            color: var(--success);
+        }
+        
+        .card-3 .card-icon-wrapper {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(6, 182, 212, 0.2) 100%);
+            color: var(--accent);
+        }
+        
+        .card:hover .card-icon-wrapper {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .card-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            width: 80%;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .card-1 .card-badge {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+        }
+        
+        .card-2 .card-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .card-3 .card-badge {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent);
+        }
+        
+        .card-title {
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--dark);
+        }
+        
+        .card-subtitle {
+            color: var(--gray);
+            margin-bottom: 32px;
+            font-size: 1rem;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+        
+        .card-features {
+            margin-bottom: 25px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .feature-item i {
+            margin-right: 10px;
+            color: var(--primary);
+            font-size: 0.8rem;
+        }
+        
+        .card-2 .feature-item i {
+            color: var(--success);
+        }
+        
+        .card-3 .feature-item i {
+            color: var(--accent);
+        }
+        
+        .card-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--dark);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition-fast);
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .card-button:hover::before {
+            left: 100%;
+        }
+        
+        .card-1 .card-button {
+            background: var(--gradient-primary);
+        }
+        
+        .card-2 .card-button {
+            background: var(--gradient-success);
+        }
+        
+        .card-3 .card-button {
+            background: var(--gradient-accent);
+        }
+        
+        .card-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+        }
+        
+        .card-button i {
+            transition: var(--transition-fast);
+            font-size: 0.9rem;
+        }
+        
+        .card-button:hover i {
+            transform: translateX(5px);
+        }
+        
+        /* Upload Demo */
+        .upload-demo {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 25px;
+            border: 2px dashed rgba(79, 70, 229, 0.2);
+            transition: var(--transition-fast);
+        }
+        
+        .upload-demo:hover {
+            border-color: rgba(79, 70, 229, 0.4);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .upload-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--gray);
+            font-weight: 500;
+        }
+        
+        .upload-text i {
+            color: var(--primary);
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px 0 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+        
+        .footer-link {
+            color: var(--gray);
+            text-decoration: none;
+            transition: var(--transition-fast);
+        }
+        
+        .footer-link:hover {
+            color: var(--primary);
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 20px;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+            
+            .nav-links {
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .stats {
+                gap: 20px;
+                flex-wrap: wrap;
+            }
+            
+            .cards-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 25px;
+            }
+            
+            .card {
+                max-width: 100%;
+                width: 100%;
+            }
+            
+            .footer-links {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+        }
+        
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .cards-container {
+                gap: 25px;
+            }
+            
+            .card {
+                max-width: calc(50% - 15px);
+            }
+            
+            .card:nth-child(3) {
+                max-width: 100%;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .hero, .card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        
+        .card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        .logo-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header & Navigation -->
+        <header>
+            <a href="#" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-archive"></i>
+                </div>
+                <span class="logo-text">Arsip Digital</span>
+            </a>
+            <div class="nav-links">
+                <a href="#" class="nav-link active">Beranda</a>
+                <a href="#" class="nav-link">Convert</a>
+                <a href="#" class="nav-link">Reorganize</a>
+                <a href="#" class="nav-link">Watermark</a>
+            </div>
+        </header>
+        
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>Alih Media Arsip Fisik ke Format Digital</h1>
+            <p>Platform khusus untuk membantu proses digitalisasi arsip fisik menjadi format PDF yang terstruktur, aman, dan mudah diakses. Lakukan konversi, pengaturan, dan proteksi dokumen dalam satu tempat.</p>
+            <a href="#fitur" class="cta-button">Mulai Sekarang</a>
+        </section>
+        
+        <!-- Cards Container -->
+        <div class="cards-container" id="fitur">
+            <!-- Card 1: JPG to PDF -->
+            <div class="card card-1">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">
+                        <i class="fas fa-file-image"></i>
+                    </div>
+                    <span class="card-badge">Tahap 1: Konversi</span>
+                </div>
+                <h2 class="card-title">Konversi ke PDF</h2>
+                <p class="card-subtitle">Konversi hasil scan dokumen (JPG/PNG) dari arsip fisik menjadi file PDF yang rapi. Mendukung multiple scan untuk dokumen multi-halaman.</p>
+                
+                <a href="scan-to-pdf.html" class="card-button">
+                    <span>Mulai Konversi</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            
+            <!-- Card 2: Organize PDF -->
+            <div class="card card-2">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">
+                        <i class="fas fa-copy"></i>
+                    </div>
+                    <span class="card-badge">Tahap 2: Pengaturan</span>
+                </div>
+                <h2 class="card-title">Atur Halaman PDF</h2>
+                <p class="card-subtitle">Atur ulang, tambah, atau hapus halaman dari PDF hasil digitalisasi. Perbaiki kesalahan scan dan susun dokumen sesuai struktur asli.</p>
+
+                
+                <a href="atur-pdf.html" class="card-button">
+                    <span>Atur Dokumen</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            
+            <!-- Card 3: Watermark PDF -->
+            <div class="card card-3">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">
+                        <i class="fas fa-shield"></i>
+                    </div>
+                    <span class="card-badge">Tahap 3: Proteksi</span>
+                </div>
+                <h2 class="card-title">Watermark Arsip</h2>
+                <p class="card-subtitle">Tambahkan watermark identitas pada arsip digital untuk melindungi hak kepemilikan dan mencegah penyalahgunaan dokumen.</p>
+                
+                <a href="watermark-arsip.html" class="card-button">
+                    <span>Proteksi Arsip</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2026 Arsip Digital. Developed by <a href="https://instagram.com">Tatang Aditya</a></p>
+            <p>Dikembangkan untuk keperluan aktualitasi latsar</p>
+        </footer>
+    </div>
+
+    <script>
+        // Interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            const uploadDemos = document.querySelectorAll('.upload-demo');
+            
+            // Mouse move parallax effect for cards
+            document.addEventListener('mousemove', (e) => {
+                const mouseX = e.clientX / window.innerWidth;
+                const mouseY = e.clientY / window.innerHeight;
+                
+                cards.forEach((card, index) => {
+                    const speed = 0.02;
+                    const x = (mouseX - 0.5) * speed * 100;
+                    const y = (mouseY - 0.5) * speed * 100;
+                    
+                    if (index === 0) {
+                        card.style.transform = `translate(calc(-12px + ${x}px), calc(-12px + ${y}px)) scale(1.02)`;
+                    } else if (index === 1) {
+                        card.style.transform = `translate(calc(0px + ${x * 0.8}px), calc(-12px + ${y * 0.8}px)) scale(1.02)`;
+                    } else if (index === 2) {
+                        card.style.transform = `translate(calc(12px + ${x * 0.6}px), calc(-12px + ${y * 0.6}px)) scale(1.02)`;
+                    }
+                });
+            });
+            
+            // Reset card position when mouse leaves
+            document.addEventListener('mouseleave', () => {
+                cards.forEach(card => {
+                    card.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+            
+            // Upload demo click effect
+            uploadDemos.forEach(uploadDemo => {
+                uploadDemo.addEventListener('click', function() {
+                    this.style.borderColor = 'rgba(79, 70, 229, 0.6)';
+                    this.style.backgroundColor = 'rgba(255, 255, 255, 0.98)';
+                    
+                    setTimeout(() => {
+                        this.style.borderColor = 'rgba(79, 70, 229, 0.4)';
+                        this.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+                    }, 300);
+                });
+            });
+            
+            // Dynamic year in footer
+            document.querySelectorAll('footer p').forEach(p => {
+                p.innerHTML = p.innerHTML.replace('2023', new Date().getFullYear());
+            });
+            
+            // Card click animation
+            cards.forEach(card => {
+                card.addEventListener('click', function(e) {
+                    // Only trigger if not clicking a button
+                    if (!e.target.classList.contains('card-button') && 
+                        !e.target.closest('.card-button') &&
+                        !e.target.closest('.upload-demo')) {
+                        
+                        this.style.transform = 'translateY(-8px) scale(1.02)';
+                        setTimeout(() => {
+                            this.style.transform = 'translateY(-12px) scale(1.02)';
+                        }, 150);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
