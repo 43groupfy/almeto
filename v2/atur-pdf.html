@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organisasi & Konversi PDF - Arsivita</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    
+    /* CSS untuk badge file type */
+    .file-type-badge {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        /* display: flex; */
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        z-index: 2;
+    }
+
+    .image-badge {
+        background: rgba(76, 175, 80, 0.9);
+        color: white;
+    }
+
+    .pdf-badge {
+        background: rgba(244, 67, 54, 0.9);
+        color: white;
+    }
+    
+    .preview-item {
+        position: relative;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header Navigation -->
+  <header>  
+    <div class="header-container">
+      <div class="logo">  
+        <img src="https://43groupfy.github.io/almeto/icons/appIcon.png" alt="Splash Logo" width="40" height="40">  
+        <span>ARSIVITA</span>  
+      </div>  
+      <div class="menu-toggle" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <nav class="nav-links" id="navLinks">  
+        <a href="../index.html">Home</a>  
+        <a href="#" class="active">Organisasi PDF</a>  
+        <a href="../watermark">Watermark</a>  
+        <a href="../split">Split</a>  
+        <a href="../merge">Merge</a>  
+      </nav>
+    </div>
+  </header> 
+  
+  <div style="margin-top:30px;"></div>
+
+  <div class="container">
+    <!-- Main Content Grid -->
+    <div class="main-content-grid">
+      <!-- Kolom Kiri: Konfigurasi -->
+      <div class="content-column">
+        <div class="card">          
+          <div class="card-title">
+            <i class="fas fa-cogs"></i>
+            Konfigurasi Output
+          </div>
+
+          <div class="form-group">
+            <label for="pdfFilename">
+              <i class="fas fa-file-signature"></i>
+              Nama File Output
+            </label>
+            <input type="text" id="pdfFilename" class="form-input" placeholder="Masukkan nama file PDF">
+          </div>
+          
+          <div class="form-group">
+            <label for="paperSize">
+              <i class="fas fa-file"></i>
+              Ukuran Kertas
+            </label>
+            <select id="paperSize" class="form-select">
+              <option value="F4" selected>F4 (210 x 330 mm)</option>
+              <option value="A4">A4 (210 x 297 mm)</option>
+              <option value="A3">A3 (297 x 420 mm)</option>
+              <option value="Legal">Legal (216 x 356 mm)</option>
+              <option value="Letter">Letter (216 x 279 mm)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="paperOrientation">
+              <i class="fas fa-compress-alt"></i>
+              Orientasi Kertas
+            </label>
+            <select id="paperOrientation" class="form-select">
+              <option value="adaptif" selected>Adaptif (Otomatis)</option>
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </div>
+
+          <div class="convert-buttons">
+            <button id="generateBtn">
+              <i class="fas fa-file-export"></i>
+              Generate PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kolom Kanan: Preview & Kontrol -->
+      <div class="content-column">
+        <div class="checkbox-option compact-layout">
+          <button class="btn-prev toggle-preview-btn" id="togglePreviewBtn">
+            <i class="fas fa-eye-slash"></i>
+            <span class="btn-text">Hide Preview</span>
+          </button>
+          
+          <button id="sortToggleBtn" class="btn-prev" title="Urutkan A–Z">
+            <i class="fas fa-sort-alpha-down"></i>
+            <span class="btn-text">Sort A–Z</span>
+          </button>
+
+          <button class="btn-prev" id="selectAllBtn">
+            <i class="fas fa-object-group"></i>
+            <span class="btn-text">Pilih Semua</span>
+          </button>
+          
+          <button class="btn-prev" id="rotateSelectedBtn">
+            <i class="fas fa-sync"></i>
+            <span class="btn-text">Putar Terpilih</span>
+          </button>
+          
+          <button class="btn-prev btn-danger" id="deleteSelectedBtn">
+            <i class="fas fa-trash"></i>
+            <span class="btn-text">Hapus Terpilih</span>
+          </button>
+
+          <button class="btn-prev btn-dark" id="clearAllBtn">
+            <i class="fas fa-power-off"></i>
+            <span class="btn-text">Reset</span>
+          </button>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progressContainer" class="progress-container">
+          <div class="progress-header">
+            <div class="progress-label">Membuat PDF...</div>
+            <div class="progress-percent" id="progressPercent">0%</div>
+          </div>
+          <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+          <div id="progressText" class="progress-text">Mempersiapkan...</div>
+        </div>
+
+        <!-- Messages -->
+        <div id="errorMessage" class="error"></div>
+        <div id="successMessage" class="success"></div>
+
+        <!-- Preview Area -->
+        <div id="preview" class="preview-container">
+          <div class="converter-empty-state">
+            <div class="file-upload-area" id="dropArea">
+              <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+              </div>
+              <h3>Upload File PDF Pertama</h3>
+              <p>Drag & drop file PDF atau gambar</p>
+              <div class="file-info" id="fileInfo">File pertama harus PDF, format: JPG, PNG, GIF, PDF</div>
+              <input type="file" id="fileInput" multiple accept=".pdf,image/*" style="display:none">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>© 2025 <b>Arsivita</b> | Dikembangkan <a href="1.html">Tatang Adity</a> untuk aktualisasi Latsar ASN </p>
+    </div>
+  </footer>
+
+  <!-- Script Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+  <!-- Main JavaScript Code -->
+  <script>
+// File JavaScript lengkap dengan semua fungsi
+
+// State aplikasi
+let pages = [];
+let isConverting = false;
+let conversionCanceled = false;
+let allSelected = false;
+let showPreview = true;
+let isAscending = true;
+let isProcessingFiles = false;
+
+// ========== INISIALISASI APLIKASI ==========
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+});
+
+function initializeApp() {
+    console.log('Initializing PDF Organizer...');
+
+    // Inisialisasi elemen DOM
+    const dropArea = document.getElementById('dropArea');
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
+    
+    if (!fileInput || !preview || !dropArea) {
+        console.error('Required elements not found');
+        return;
+    }
+
+    // Set accept attribute
+    fileInput.accept = '.pdf,image/*';
+    
+    // Inisialisasi upload area
+    initUploadArea();
+    
+    // Event listeners untuk tombol-tombol kontrol
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const rotateSelectedBtn = document.getElementById('rotateSelectedBtn');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const generateBtn = document.getElementById('generateBtn');
+    const togglePreviewBtn = document.getElementById('togglePreviewBtn');
+    const sortToggleBtn = document.getElementById('sortToggleBtn');
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+
+    if (selectAllBtn) selectAllBtn.addEventListener('click', toggleSelectAll);
+    if (rotateSelectedBtn) rotateSelectedBtn.addEventListener('click', rotateSelectedPages);
+    if (deleteSelectedBtn) deleteSelectedBtn.addEventListener('click', deleteSelectedPages);
+    if (clearAllBtn) clearAllBtn.addEventListener('click', resetAll);
+    if (generateBtn) generateBtn.addEventListener('click', generatePDF);
+    if (togglePreviewBtn) togglePreviewBtn.addEventListener('click', togglePreviewMode);
+    if (sortToggleBtn) sortToggleBtn.addEventListener('click', toggleSortOrder);
+    
+    // Mobile menu toggle
+    if (menuToggle && navLinks) {
+        menuToggle.addEventListener('click', function() {
+            navLinks.classList.toggle('active');
+        });
+    }
+
+    // Set nama file default
+    const pdfFilenameInput = document.getElementById('pdfFilename');
+    if (pdfFilenameInput) {
+        const now = new Date();
+        const dateString = now.toISOString().slice(0, 10).replace(/-/g, '');
+        pdfFilenameInput.value = `dokumen_${dateString}`;
+        
+        pdfFilenameInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[<>:"/\\|?*]/g, '');
+            if (this.value.length > 100) {
+                this.value = this.value.substring(0, 100);
+            }
+        });
+    }
+
+    // Update UI
+    updateSortToggleBtn();
+    updateClearAllButton();
+    updateButtonTexts();
+    
+    console.log('PDF Organizer initialized successfully');
+}
+
+// ========== FUNGSI UPLOAD AREA ==========
+function initUploadArea() {
+    const dropArea = document.getElementById('dropArea');
+    const fileInput = document.getElementById('fileInput');
+
+    if (!dropArea || !fileInput) return;
+
+    // Click event untuk drop area
+    dropArea.addEventListener('click', function(e) {
+        // Hanya trigger jika klik langsung pada drop area atau child tertentu
+        if (e.target === dropArea || 
+            e.target.classList.contains('upload-icon') || 
+            e.target.classList.contains('fa-cloud-upload-alt') ||
+            e.target.classList.contains('file-info') ||
+            e.target.tagName === 'H3' ||
+            e.target.tagName === 'P') {
+            console.log('Drop area clicked');
+            if (!isProcessingFiles) {
+                fileInput.click();
+            }
+        }
+    });
+
+    // File input change event
+    fileInput.addEventListener('change', function(e) {
+        console.log('File selected via input:', e.target.files.length);
+        if (e.target.files.length === 0 || isProcessingFiles) return;
+        const files = Array.from(e.target.files);
+        handleFiles(files);
+    });
+
+    // Drag over event
+    dropArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropArea.classList.add('dragover');
+        console.log('Drag over');
+    });
+
+    // Drag leave event
+    dropArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Only remove class if leaving the drop area itself
+        if (e.target === dropArea || e.relatedTarget === null || 
+            !dropArea.contains(e.relatedTarget)) {
+            dropArea.classList.remove('dragover');
+            console.log('Drag leave');
+        }
+    });
+
+    // Drop event
+    dropArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropArea.classList.remove('dragover');
+        
+        console.log('Files dropped:', e.dataTransfer.files.length);
+        if (e.dataTransfer.files.length === 0 || isProcessingFiles) return;
+        
+        const files = Array.from(e.dataTransfer.files);
+        handleFiles(files);
+    });
+
+    console.log('Upload area initialized');
+}
+
+// ========== FUNGSI HELPER ==========
+function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => {
+            console.error('FileReader error:', e);
+            reject(new Error(`Gagal membaca file: ${file.name}`));
+        };
+        reader.onabort = (e) => {
+            console.error('FileReader aborted:', e);
+            reject(new Error(`Pembacaan file dibatalkan: ${file.name}`));
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function readFileAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.onabort = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+// ========== PROSES FILE UPLOAD ==========
+async function handleFiles(files) {
+    console.log('Processing files:', files.length);
+    
+    if (files.length === 0 || isProcessingFiles) {
+        console.log('No files to process or already processing');
+        return;
+    }
+    
+    isProcessingFiles = true;
+    
+    // Cek jika ini adalah upload pertama
+    const isFirstUpload = pages.length === 0;
+    
+    if (isFirstUpload) {
+        // Upload pertama harus ada PDF
+        const hasPDF = files.some(file => 
+            file.type === 'application/pdf' || 
+            file.name.toLowerCase().endsWith('.pdf')
+        );
+        
+        if (!hasPDF) {
+            showError('File pertama harus berupa PDF. Silakan upload setidaknya satu file PDF terlebih dahulu.');
+            isProcessingFiles = false;
+            return;
+        }
+    }
+    
+    // Pisahkan file gambar dan PDF
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    const pdfFiles = files.filter(file => 
+        file.type === 'application/pdf' || 
+        file.name.toLowerCase().endsWith('.pdf')
+    );
+    
+    console.log('Image files:', imageFiles.length, 'PDF files:', pdfFiles.length);
+    
+    if (imageFiles.length === 0 && pdfFiles.length === 0) {
+        showError('Tidak ada file yang valid. Format yang didukung: JPG, PNG, GIF, PDF');
+        isProcessingFiles = false;
+        return;
+    }
+    
+    const newPages = [];
+    
+    // Proses gambar
+    for (const file of imageFiles) {
+        try {
+            console.log('Processing image:', file.name);
+            const imgSrc = await readFileAsDataURL(file);
+            newPages.push({
+                id: generateId(),
+                name: file.name,
+                type: 'image',
+                src: imgSrc,
+                rotation: 0,
+                selected: false,
+                originalFile: file
+            });
+            console.log('Image processed:', file.name);
+        } catch (error) {
+            console.error('Error reading image file:', file.name, error);
+            showError(`Gagal membaca gambar: ${file.name}`);
+        }
+    }
+    
+    // Proses PDF - Konversi setiap halaman ke gambar
+    for (const file of pdfFiles) {
+        try {
+            console.log('Processing PDF:', file.name);
+            const pdfData = await readFileAsArrayBuffer(file);
+            
+            // Set nama file default dari PDF pertama
+            if (isFirstUpload && newPages.length === 0 && pages.length === 0) {
+                const pdfFilenameInput = document.getElementById('pdfFilename');
+                if (pdfFilenameInput) {
+                    const fileNameWithoutExt = file.name.replace(/\.pdf$/i, '');
+                    pdfFilenameInput.value = fileNameWithoutExt;
+                    console.log('Set default filename to:', fileNameWithoutExt);
+                }
+            }
+            
+            // Konversi PDF ke gambar menggunakan PDF.js
+            console.log('Converting PDF to images:', file.name);
+            const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+            const pdfDoc = await loadingTask.promise;
+            const totalPages = pdfDoc.numPages;
+            
+            console.log('PDF has', totalPages, 'pages');
+            
+            for (let i = 1; i <= totalPages; i++) {
+                try {
+                    const page = await pdfDoc.getPage(i);
+                    
+                    // Render halaman ke canvas
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+                    
+                    // Konversi canvas ke data URL
+                    const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                    
+                    newPages.push({
+                        id: generateId(),
+                        name: `${file.name} - Halaman ${i}`,
+                        type: 'pdf-converted',
+                        src: imgData,
+                        rotation: 0,
+                        selected: false,
+                        originalFile: file,
+                        pageNumber: i,
+                        pdfData: pdfData
+                    });
+                    
+                    console.log(`PDF page ${i} converted`);
+                    
+                } catch (pageError) {
+                    console.error(`Error converting PDF page ${i}:`, pageError);
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error processing PDF file:', file.name, error);
+            showError(`Gagal memproses PDF: ${file.name}. Pastikan file PDF tidak rusak.`);
+        }
+    }
+    
+    // Tambahkan halaman baru ke array utama
+    pages = [...pages, ...newPages];
+    isProcessingFiles = false;
+    
+    if (newPages.length > 0) {
+        sortPages(isAscending);
+        renderPreview();
+        
+        const imgCount = imageFiles.length;
+        const pdfPageCount = newPages.length - imgCount;
+        const message = `Berhasil menambahkan ${newPages.length} halaman`;
+        const details = [];
+        if (imgCount > 0) details.push(`${imgCount} gambar`);
+        if (pdfPageCount > 0) details.push(`${pdfPageCount} halaman PDF`);
+        
+        showSuccess(`${message} (${details.join(', ')})`);
+    } else {
+        showError('Tidak ada halaman yang berhasil diproses');
+    }
+    
+    // Reset file input
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) fileInput.value = '';
+}
+
+// ========== RENDER PREVIEW ==========
+function renderPreview() {
+    const preview = document.getElementById('preview');
+    if (!preview) return;
+
+    // Hapus empty state jika ada
+    const emptyState = preview.querySelector('.converter-empty-state');
+    if (emptyState) {
+        emptyState.remove();
+    }
+    
+    preview.innerHTML = '';
+
+    if (pages.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'converter-empty-state';
+        emptyState.innerHTML = `
+            <div class="file-upload-area" id="dropArea">
+                <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>Upload File PDF Pertama</h3>
+                <p>Drag & drop file PDF atau gambar</p>
+                <div class="file-info" id="fileInfo">File pertama harus PDF, format: JPG, PNG, GIF, PDF</div>
+                <input type="file" id="fileInput" multiple accept=".pdf,image/*" style="display:none">
+            </div>
+        `;
+        preview.appendChild(emptyState);
+        updateUploadArea();
+        // Re-initialize upload area untuk empty state
+        initUploadArea();
+        return;
+    }
+
+    // Render semua halaman
+    pages.forEach((page, index) => {
+        const container = document.createElement('div');
+        container.className = `preview-item ${page.selected ? 'selected' : ''}`;
+        container.dataset.index = index;
+        container.dataset.id = page.id;
+
+        // Tentukan badge
+        let badgeClass = 'image-badge';
+        let badgeIcon = 'fa-image';
+        let badgeTitle = 'Gambar';
+        
+        if (page.type === 'pdf-converted') {
+            badgeClass = 'pdf-badge';
+            badgeIcon = 'fa-file-pdf';
+            badgeTitle = 'Halaman PDF';
+        }
+        
+        let previewContent = '';
+        
+        if (showPreview) {
+            previewContent = `
+                <div class="preview-checkbox">
+                    <input type="checkbox" class="img-checkbox" ${page.selected ? 'checked' : ''}>
+                </div>
+                <div class="file-type-badge ${badgeClass}" title="${badgeTitle}">
+                    <i class="fas ${badgeIcon}"></i>
+                </div>
+                <img src="${page.src}" alt="${page.name}" class="preview-image" loading="lazy" style="transform: rotate(${page.rotation}deg)">
+                <div class="preview-name">${page.name}</div>
+                <div class="preview-actions">
+                    <button class="preview-action-btn rotate-btn" title="Putar 90°">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <button class="preview-action-btn delete-btn" title="Hapus">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <button class="preview-action-btn add-after-btn rotate-bottom" title="Tambah file setelah ini">
+                    <i class="fas fa-plus"></i>
+                </button>
+            `;
+        } else {
+            previewContent = `
+                <div class="preview-checkbox">
+                    <input type="checkbox" class="img-checkbox" ${page.selected ? 'checked' : ''}>
+                </div>
+                <div class="file-type-badge ${badgeClass}" title="${badgeTitle}">
+                    <i class="fas ${badgeIcon}"></i>
+                </div>
+                <div class="preview-name">${page.name}</div>
+                <div class="preview-actions">
+                    <button class="preview-action-btn rotate-btn" title="Putar 90°">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <button class="preview-action-btn delete-btn" title="Hapus">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <button class="preview-action-btn add-after-btn rotate-bottom" title="Tambah file setelah ini">
+                    <i class="fas fa-plus"></i>
+                </button>
+            `;
+        }
+
+        container.innerHTML = previewContent;
+
+        // Event listeners untuk kontrol dalam preview
+        const checkbox = container.querySelector('.img-checkbox');
+        const deleteBtn = container.querySelector('.delete-btn');
+        const rotateBtn = container.querySelector('.rotate-btn');
+        const addAfterBtn = container.querySelector('.add-after-btn');
+
+        checkbox.addEventListener('change', () => togglePageSelection(index));
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteSinglePage(index);
+        });
+        
+        rotateBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            rotatePage(index);
+        });
+        
+        addAfterBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            addPageAfter(index);
+        });
+
+        preview.appendChild(container);
+    });
+    
+    updateUploadArea();
+    updateClearAllButton();
+    
+    // Initialize Sortable untuk drag & drop organizer
+    if (!preview.sortable && typeof Sortable !== 'undefined') {
+        preview.sortable = new Sortable(preview, {
+            animation: 150,
+            delay: 100,
+            filter: '.file-upload-area', // Jangan drag upload area
+            onEnd: (evt) => {
+                const newPages = [];
+                const containers = document.querySelectorAll('.preview-item');
+                containers.forEach(container => {
+                    const id = container.dataset.id;
+                    const page = pages.find(p => p.id === id);
+                    if (page) newPages.push(page);
+                });
+                pages = newPages;
+                isAscending = false;
+                renderPreview();
+            }
+        });
+    }
+}
+
+function updateUploadArea() {
+    const dropArea = document.getElementById('dropArea');
+    const fileInfo = document.getElementById('fileInfo');
+    
+    if (dropArea && fileInfo) {
+        if (pages.length > 0) {
+            dropArea.classList.add('has-file');
+            const imageCount = pages.filter(p => p.type === 'image').length;
+            const pdfCount = pages.filter(p => p.type === 'pdf-converted').length;
+            
+            let infoText = '';
+            if (imageCount > 0 && pdfCount > 0) {
+                infoText = `${pages.length} halaman (${imageCount} gambar, ${pdfCount} PDF)`;
+            } else if (imageCount > 0) {
+                infoText = `${imageCount} gambar dipilih`;
+            } else if (pdfCount > 0) {
+                infoText = `${pdfCount} halaman PDF dipilih`;
+            }
+            fileInfo.textContent = infoText;
+        } else {
+            dropArea.classList.remove('has-file');
+            fileInfo.textContent = 'File pertama harus PDF, format: JPG, PNG, GIF, PDF';
+        }
+    }
+}
+
+// ========== FUNGSI ORGANISASI HALAMAN ==========
+function togglePageSelection(index) {
+    pages[index].selected = !pages[index].selected;
+    renderPreview();
+}
+
+function toggleSelectAll() {
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    
+    allSelected = !allSelected;
+    pages.forEach(page => {
+        page.selected = allSelected;
+    });
+    
+    if (selectAllBtn) {
+        selectAllBtn.innerHTML = allSelected ? 
+            '<i class="fas fa-times-circle"></i><span class="btn-text">Batal Pilih Semua</span>' : 
+            '<i class="fas fa-object-group"></i><span class="btn-text">Pilih Semua</span>';
+    }
+        
+    renderPreview();
+}
+
+function rotatePage(index) {
+    // Putar halaman 90 derajat
+    pages[index].rotation = (pages[index].rotation + 90) % 360;
+    renderPreview();
+}
+
+function rotateSelectedPages() {
+    const hasSelected = pages.some(page => page.selected);
+    
+    if (!hasSelected) {
+        showError('Pilih setidaknya satu halaman untuk diputar.');
+        return;
+    }
+    
+    pages.forEach((page, index) => {
+        if (page.selected) {
+            pages[index].rotation = (page.rotation + 90) % 360;
+        }
+    });
+    
+    renderPreview();
+}
+
+function deleteSinglePage(index) {
+    if (confirm(`Hapus halaman "${pages[index].name}"?`)) {
+        pages.splice(index, 1);
+        renderPreview();
+        showSuccess('Halaman telah dihapus');
+    }
+}
+
+function deleteSelectedPages() {
+    const hasSelected = pages.some(page => page.selected);
+    
+    if (!hasSelected) {
+        showError('Pilih setidaknya satu halaman untuk dihapus.');
+        return;
+    }
+    
+    const selectedCount = pages.filter(p => p.selected).length;
+    if (confirm(`Hapus ${selectedCount} halaman yang dipilih?`)) {
+        pages = pages.filter(page => !page.selected);
+        allSelected = false;
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        if (selectAllBtn) {
+            selectAllBtn.innerHTML = '<i class="fas fa-object-group"></i><span class="btn-text">Pilih Semua</span>';
+        }
+        renderPreview();
+        showSuccess(`${selectedCount} halaman terpilih telah dihapus`);
+    }
+}
+
+function addPageAfter(index) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,image/*';
+    input.multiple = true;
+
+    input.onchange = async () => {
+        const files = Array.from(input.files);
+        if (files.length === 0) return;
+        
+        console.log('Adding files after index:', index, 'File count:', files.length);
+        
+        // Cek apakah ada PDF (untuk validasi jika ini upload pertama setelah reset)
+        const hasPDF = files.some(file => 
+            file.type === 'application/pdf' || 
+            file.name.toLowerCase().endsWith('.pdf')
+        );
+        
+        // Jika belum ada halaman sama sekali, tetap harus upload PDF dulu
+        if (pages.length === 0 && !hasPDF) {
+            showError('File pertama harus berupa PDF. Silakan upload file PDF terlebih dahulu.');
+            return;
+        }
+        
+        // Proses file yang diupload
+        isProcessingFiles = true;
+        
+        // Pisahkan file gambar dan PDF
+        const imageFiles = files.filter(file => file.type.startsWith('image/'));
+        const pdfFiles = files.filter(file => 
+            file.type === 'application/pdf' || 
+            file.name.toLowerCase().endsWith('.pdf')
+        );
+        
+        const newPages = [];
+        
+        // Proses gambar
+        for (const file of imageFiles) {
+            try {
+                const imgSrc = await readFileAsDataURL(file);
+                newPages.push({
+                    id: generateId(),
+                    name: file.name,
+                    type: 'image',
+                    src: imgSrc,
+                    rotation: 0,
+                    selected: false,
+                    originalFile: file
+                });
+            } catch (error) {
+                console.error('Error reading image file:', file.name, error);
+            }
+        }
+        
+        // Proses PDF
+        for (const file of pdfFiles) {
+            try {
+                const pdfData = await readFileAsArrayBuffer(file);
+                
+                // Set nama file default dari PDF pertama jika ini file pertama
+                if (pages.length === 0 && newPages.length === 0) {
+                    const pdfFilenameInput = document.getElementById('pdfFilename');
+                    if (pdfFilenameInput) {
+                        const fileNameWithoutExt = file.name.replace(/\.pdf$/i, '');
+                        pdfFilenameInput.value = fileNameWithoutExt;
+                    }
+                }
+                
+                // Konversi PDF ke gambar
+                const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+                const pdfDoc = await loadingTask.promise;
+                const totalPages = pdfDoc.numPages;
+                
+                for (let i = 1; i <= totalPages; i++) {
+                    const page = await pdfDoc.getPage(i);
+                    
+                    // Render halaman ke canvas
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+                    
+                    const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                    
+                    newPages.push({
+                        id: generateId(),
+                        name: `${file.name} - Halaman ${i}`,
+                        type: 'pdf-converted',
+                        src: imgData,
+                        rotation: 0,
+                        selected: false,
+                        originalFile: file,
+                        pageNumber: i,
+                        pdfData: pdfData
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error processing PDF file:', file.name, error);
+            }
+        }
+        
+        // Sisipkan halaman baru setelah index yang dipilih
+        if (newPages.length > 0) {
+            // Sisipkan halaman baru setelah posisi index
+            pages.splice(index + 1, 0, ...newPages);
+            
+            isProcessingFiles = false;
+            sortPages(isAscending);
+            renderPreview();
+            
+            const imgCount = imageFiles.length;
+            const pdfPageCount = newPages.length - imgCount;
+            
+            let message = `${newPages.length} file ditambahkan`;
+            if (imgCount > 0 && pdfPageCount > 0) {
+                message += ` (${imgCount} gambar, ${pdfPageCount} halaman PDF)`;
+            } else if (imgCount > 0) {
+                message += ` (${imgCount} gambar)`;
+            } else if (pdfPageCount > 0) {
+                message += ` (${pdfPageCount} halaman PDF)`;
+            }
+            
+            showSuccess(message);
+        } else {
+            isProcessingFiles = false;
+            showError('Tidak ada file yang berhasil diproses');
+        }
+    };
+
+    input.click();
+}
+
+function sortPages(ascending = true) {
+    if (pages.length === 0) return;
+    
+    pages.sort((a, b) => {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        if (nameA < nameB) return ascending ? -1 : 1;
+        if (nameA > nameB) return ascending ? 1 : -1;
+        return 0;
+    });
+    renderPreview();
+}
+
+function resetAll() {
+    if (pages.length === 0) return;
+    
+    if (confirm('Hapus semua halaman?')) {
+        pages = [];
+        allSelected = false;
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput) fileInput.value = '';
+        isAscending = true;
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        if (selectAllBtn) {
+            selectAllBtn.innerHTML = '<i class="fas fa-object-group"></i><span class="btn-text">Pilih Semua</span>';
+        }
+        
+        // Reset nama file
+        const pdfFilenameInput = document.getElementById('pdfFilename');
+        if (pdfFilenameInput) {
+            const now = new Date();
+            const dateString = now.toISOString().slice(0, 10).replace(/-/g, '');
+            pdfFilenameInput.value = `dokumen_${dateString}`;
+        }
+        
+        renderPreview();
+        showSuccess('Semua halaman telah dihapus');
+    }
+}
+
+function togglePreviewMode() {
+    showPreview = !showPreview;
+    updateToggleButton();
+    renderPreview();
+}
+
+function updateToggleButton() {
+    const togglePreviewBtn = document.getElementById('togglePreviewBtn');
+    if (!togglePreviewBtn) return;
+
+    if (showPreview) {
+        togglePreviewBtn.innerHTML = '<i class="fas fa-eye-slash"></i><span class="btn-text">Hide Preview</span>';
+        togglePreviewBtn.classList.remove('hide-mode');
+    } else {
+        togglePreviewBtn.innerHTML = '<i class="fas fa-eye"></i><span class="btn-text">Show Preview</span>';
+        togglePreviewBtn.classList.add('hide-mode');
+    }
+}
+
+function toggleSortOrder() {
+    isAscending = !isAscending;
+    sortPages(isAscending);
+    updateSortToggleBtn();
+}
+
+function updateSortToggleBtn() {
+    const btn = document.getElementById('sortToggleBtn');
+    if (!btn) return;
+
+    if (isAscending) {
+        btn.innerHTML = `
+            <i class="fas fa-sort-alpha-down"></i>
+            <span class="btn-text">Sort A-Z</span>
+        `;
+        btn.title = 'Urutkan A ke Z';
+    } else {
+        btn.innerHTML = `
+            <i class="fas fa-sort-alpha-up"></i>
+            <span class="btn-text">Sort Z-A</span>
+        `;
+        btn.title = 'Urutkan Z ke A';
+    }
+}
+
+// ========== GENERATE PDF FINAL ==========
+async function generatePDF() {
+    if (pages.length === 0) {
+        showError('Silakan upload file terlebih dahulu.');
+        return;
+    }
+    
+    const pdfFilenameInput = document.getElementById('pdfFilename');
+    let filename = pdfFilenameInput ? pdfFilenameInput.value.trim() : '';
+    
+    if (filename === '') {
+        showError('Masukkan nama file PDF.');
+        if (pdfFilenameInput) pdfFilenameInput.focus();
+        return;
+    }
+    
+    if (!filename.toLowerCase().endsWith('.pdf')) {
+        filename += '.pdf';
+    }
+    
+    isConverting = true;
+    conversionCanceled = false;
+    
+    const generateBtn = document.getElementById('generateBtn');
+    if (generateBtn) generateBtn.disabled = true;
+    
+    showProgress();
+    updateProgress(0, 'Mempersiapkan PDF...');
+    
+    try {
+        const pdfDoc = await PDFLib.PDFDocument.create();
+        const totalPages = pages.length;
+        
+        for (let i = 0; i < totalPages; i++) {
+            if (conversionCanceled) break;
+            
+            const page = pages[i];
+            updateProgress((i / totalPages) * 90, `Memproses halaman ${i+1}/${totalPages}`);
+            
+            await addRotatedPageToPDF(pdfDoc, page);
+            
+            // Delay kecil untuk UI responsiveness
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        
+        if (!conversionCanceled) {
+            updateProgress(95, 'Menyimpan PDF...');
+            
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            hideProgress();
+            if (generateBtn) generateBtn.disabled = false;
+            isConverting = false;
+            
+            showSuccess(`PDF "${filename}" berhasil diunduh!`);
+        }
+        
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        showError('Gagal membuat PDF. Silakan coba lagi.');
+        hideProgress();
+        if (generateBtn) generateBtn.disabled = false;
+        isConverting = false;
+    }
+}
+
+async function addRotatedPageToPDF(pdfDoc, page) {
+    try {
+        // Dapatkan konfigurasi ukuran kertas
+        const paperSizeSelect = document.getElementById('paperSize');
+        const paperOrientationSelect = document.getElementById('paperOrientation');
+        
+        const selectedSize = paperSizeSelect ? paperSizeSelect.value : 'F4';
+        const selectedOrientation = paperOrientationSelect ? paperOrientationSelect.value : 'adaptif';
+        
+        const sizeMap = {
+            F4: [595.28, 935.43], // 210x330 mm dalam points (72 dpi)
+            A4: [595.28, 841.89],
+            A3: [841.89, 1190.55],
+            Legal: [612, 1008],
+            Letter: [612, 792]
+        };
+        
+        let pageSize = sizeMap[selectedSize] || sizeMap['F4'];
+        
+        // Tentukan orientasi
+        let isLandscape = false;
+        if (selectedOrientation === 'landscape') {
+            isLandscape = true;
+        } else if (selectedOrientation === 'adaptif') {
+            // Gunakan rotasi halaman untuk menentukan orientasi
+            isLandscape = page.rotation === 90 || page.rotation === 270;
+        }
+        
+        if (isLandscape) {
+            pageSize = [pageSize[1], pageSize[0]];
+        }
+        
+        // Buat halaman baru
+        const pdfPage = pdfDoc.addPage(pageSize);
+        
+        // Proses gambar dengan rotasi
+        let imageData;
+        
+        if (page.rotation !== 0) {
+            // Buat canvas untuk menerapkan rotasi
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const img = new Image();
+            await new Promise((resolve) => {
+                img.onload = resolve;
+                img.src = page.src;
+            });
+            
+            // Atur ukuran canvas berdasarkan rotasi
+            if (page.rotation === 90 || page.rotation === 270) {
+                canvas.width = img.height;
+                canvas.height = img.width;
+            } else {
+                canvas.width = img.width;
+                canvas.height = img.height;
+            }
+            
+            // Terapkan rotasi
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(page.rotation * Math.PI / 180);
+            ctx.drawImage(img, -img.width / 2, -img.height / 2);
+            ctx.restore();
+            
+            imageData = canvas.toDataURL('image/jpeg', 0.9);
+        } else {
+            imageData = page.src;
+        }
+        
+        // Embed gambar ke PDF
+        let image;
+        if (imageData.startsWith('data:image/jpeg')) {
+            image = await pdfDoc.embedJpg(imageData);
+        } else {
+            // Konversi ke JPEG jika bukan
+            const jpgData = await convertToJpeg(imageData);
+            image = await pdfDoc.embedJpg(jpgData);
+        }
+        
+        // Hitung skala untuk fit ke halaman
+        const imageWidth = image.width;
+        const imageHeight = image.height;
+        
+        const pageWidth = pdfPage.getWidth();
+        const pageHeight = pdfPage.getHeight();
+        
+        const scale = Math.min(pageWidth / imageWidth, pageHeight / imageHeight);
+        const scaledWidth = imageWidth * scale;
+        const scaledHeight = imageHeight * scale;
+        
+        const x = (pageWidth - scaledWidth) / 2;
+        const y = (pageHeight - scaledHeight) / 2;
+        
+        // Gambar gambar di halaman PDF
+        pdfPage.drawImage(image, {
+            x: x,
+            y: y,
+            width: scaledWidth,
+            height: scaledHeight
+        });
+        
+    } catch (error) {
+        console.error('Error adding page to PDF:', error);
+        // Fallback: halaman kosong dengan pesan error
+        const pdfPage = pdfDoc.addPage([595.28, 841.89]);
+        pdfPage.drawText(`Error: ${page.name}`, {
+            x: 50,
+            y: 400,
+            size: 12
+        });
+    }
+}
+
+function convertToJpeg(dataUrl) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/jpeg', 0.9));
+        };
+        img.src = dataUrl;
+    });
+}
+
+// ========== FUNGSI UI HELPER ==========
+function showError(message) {
+    const errorMessage = document.getElementById('errorMessage');
+    if (errorMessage) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        setTimeout(() => {
+            errorMessage.style.display = 'none';
+        }, 5000);
+    } else {
+        alert(message);
+    }
+    console.error('Error:', message);
+}
+
+function showSuccess(message) {
+    const successMessage = document.getElementById('successMessage');
+    if (successMessage) {
+        successMessage.textContent = message;
+        successMessage.style.display = 'block';
+        setTimeout(() => {
+            successMessage.style.display = 'none';
+        }, 5000);
+    } else {
+        alert(message);
+    }
+    console.log('Success:', message);
+}
+
+function showProgress() {
+    const progressContainer = document.getElementById('progressContainer');
+    if (progressContainer) progressContainer.style.display = 'block';
+}
+
+function hideProgress() {
+    const progressContainer = document.getElementById('progressContainer');
+    if (progressContainer) progressContainer.style.display = 'none';
+}
+
+function updateProgress(percent, text) {
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const progressPercent = document.getElementById('progressPercent');
+    
+    if (progressFill) progressFill.style.width = `${percent}%`;
+    if (progressText) progressText.textContent = text;
+    if (progressPercent) progressPercent.textContent = `${Math.round(percent)}%`;
+}
+
+function updateClearAllButton() {
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    if (!clearAllBtn) return;
+
+    if (pages.length === 0) {
+        clearAllBtn.style.display = 'none';
+    } else {
+        clearAllBtn.style.display = 'inline-flex';
+    }
+}
+
+function updateButtonTexts() {
+    const isMobileView = window.innerWidth <= 576;
+    const buttons = document.querySelectorAll('.btn-prev');
+    
+    buttons.forEach(btn => {
+        const textSpan = btn.querySelector('.btn-text');
+        
+        if (isMobileView && textSpan) {
+            textSpan.style.display = 'none';
+            btn.title = textSpan.textContent;
+        } else if (textSpan) {
+            textSpan.style.display = 'inline';
+            btn.title = '';
+        }
+    });
+}
+
+window.addEventListener('resize', updateButtonTexts);
+
+// ========== INISIALISASI PDF.JS WORKER ==========
+// Pastikan PDF.js worker di-setup
+if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    console.log('PDF.js worker configured');
+}
+
+console.log('PDF Organizer script loaded successfully');  </script>
+</body>
+</html>
